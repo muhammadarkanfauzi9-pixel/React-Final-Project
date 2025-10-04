@@ -7,15 +7,15 @@ import ListNowPlaying from "../../components/List/listNowPlaying/ListNowPlaying"
 import Favorite from "../favorite/Favorite";
 
 const HomeView = ({ trendingMovie, trailerKey, loading }) => {
-    if (loading) return <p className="text-center text-red-900">⏳ Loading...</p>;
+    i if (loading) return <p className="mt-50 text-center text-red-900">⏳ Loading...</p>;
 
     return (
         <div className=" bg-base-100"> 
             
             {/* 🎬 Full Video Trailer */}
             {trailerKey && (
-                // Wrapper ini harus FULL WIDTH dan menempel ke tepi layar
-                <div className="relative w-[208vh] h-[90vh] overflow-hidden  ">
+               // Wrapper ini harus FULL WIDTH dan menempel ke tepi layar
+ <div className="relative w-[213vh] h-[100vh] overflow-hidden">
                     
                     {/* Video - Tetap object-cover */}
                     <iframe
