@@ -1,0 +1,15 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+@plugin "daisyui";
+
+body {
+  font-family: "Poppins", sans-serif;
+}
+
+.clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  /* Atur angka di bawah ini untuk jumlah baris maksimum */
+  -webkit-line-clamp: 2; 
+}
