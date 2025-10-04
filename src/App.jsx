@@ -44,15 +44,15 @@ function App() {
     };
 
     return (
-        <div
-            className="min-h-screen transition-colors duration-300 bg-base-100 text-base-content"
-        >
-            
-            <header className="p-4 flex justify-between items-center shadow-md bg-base-200 text-base-content">
-                <h1 className="text-2xl font-bold">
-                    <span className="text-white ">Bios</span>
-                    <span className="text-red-600">Kocak</span>
-                </h1>
+    //header bioskocak
+    <div className="min-h-screen transition-colors duration-300 bg-base-100 text-base-content">
+      <header className="p-4 flex justify-between items-center shadow-md bg-base-200 text-base-content">
+        <h1 className="text-2xl font-bold">
+          <span className={${theme === "dark" ? "text-white" : "text-black"}}>
+            Bios
+          </span>
+          <span className="text-red-600">Kocak</span>
+        </h1>
 
                 <nav className="flex gap-3">
                     <Link to="/" className="btn btn-sm btn-ghost hover:text-red-700">
