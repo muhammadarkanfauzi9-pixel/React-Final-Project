@@ -7,7 +7,7 @@ import ListNowPlaying from "../../components/List/listNowPlaying/ListNowPlaying"
 import Favorite from "../favorite/Favorite";
 
 const HomeView = ({ trendingMovie, trailerKey, loading }) => {
-    i if (loading) return <p className="mt-50 text-center text-red-900">⏳ Loading...</p>;
+    if (loading) return <p className="mt-50 text-center text-red-900">⏳ Loading...</p>;
 
     return (
         <div className=" bg-base-100"> 
