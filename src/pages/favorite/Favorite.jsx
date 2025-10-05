@@ -1,51 +1,46 @@
-// src/components/Favorite/FavoriteContainer.jsx
-
-import React, { useCallback } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { removeFavorite } from "../../reducer/favoriteReducer";
-import FavoriteView from "./FavoriteView";
+import React, { useCallback } from "react"; // Import React & useCallback untuk membuat handler efisien
+import { useSelector, useDispatch } from "react-redux"; // Hook redux untuk ambil state & dispatch action
+import { removeFavorite } from "../../reducer/favoriteReducer"; // Import action removeFavorite
+import FavoriteView from "./FavoriteView"; // Import komponen tampilan
 
 const Favorite = () => {
-  // 1. Perbaikan di sini: Ambil state.favorite, berikan default objek kosong ({}) 
-  //    jika 'state.favorite' belum terinisialisasi.
+  // Ambil state favorite dari Redux store, kalau belum ada kasih default {}
   const favoriteState = useSelector((state) => state.favorite || {});
   
-  // 2. Perbaikan di sini: Destrukturisasi 'films', 'tvs', dan 'people'
-  //    dari 'favoriteState', berikan default array kosong ([]) jika properti tersebut undefined.
+  // Destrukturisasi films, tvs, people dari favoriteState, default array kosong
   const { 
     films = [], 
     tvs = [], 
     people = [] 
   } = favoriteState;
   
-  const dispatch = useDispatch();
+  const dispatch = useDispatch(); // Hook untuk dispatch action
   
-  // Re-membuat objek favorites yang sudah dijamin aman untuk dilewatkan ke View
+  // Satukan state ke dalam satu objek agar aman diteruskan ke View
   const favorites = { films, tvs, people };
 
-  // Handler untuk menghapus item favorit
+  // Handler untuk hapus favorite (dibungkus useCallback supaya referensi tetap)
   const handleRemoveFavorite = useCallback((item, type) => {
-    dispatch(removeFavorite(item.id, type));
-    alert(`🗑️ ${item.title || item.name} telah dihapus dari Favorite!`);
+    dispatch(removeFavorite(item.id, type)); // Dispatch hapus berdasarkan id & tipe
+    alert(`🗑️ ${item.title || item.name} telah dihapus dari Favorite!`); // Notifikasi popup
   }, [dispatch]);
 
-  // Tentukan apakah ada item favorit sama sekali
-  // BARIS INI SEKARANG AMAN karena films, tvs, dan people dijamin berupa array ([]).
+  // Cek apakah ada favorit (kalau semua kosong → false)
   const hasFavorites = 
     films.length > 0 || 
     tvs.length > 0 || 
     people.length > 0;
 
-  // Melewatkan data dan handler ke komponen View
+  // Render tampilan
   return (
     <div className="container mx-auto p-4">
       <FavoriteView
-        favorites={favorites} // Meneruskan objek favorit yang aman
-        onRemove={handleRemoveFavorite} // Meneruskan handler penghapusan
-        hasFavorites={hasFavorites} // Meneruskan status keberadaan favorit
+        favorites={favorites}       // Data favorit aman
+        onRemove={handleRemoveFavorite} // Handler hapus favorit
+        hasFavorites={hasFavorites} // Status ada/tidaknya favorit
       />
     </div>
   );
 };
 
-export default Favorite;
+export default Favorite; // Export komponen
