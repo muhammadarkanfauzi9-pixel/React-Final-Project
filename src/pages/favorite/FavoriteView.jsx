@@ -37,10 +37,12 @@ const FavoriteView = () => {
 
     return (
       <div
-        key={`${type}-${item.id}`} // Key unik
-        className="relative w-[250px] h-[380px] flex-shrink-0 group rounded-xl shadow-md overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+        key={`${type}-${item.id}`}
+        className="relative w-[250px] h-[380px] flex-shrink-0 group rounded-xl 
+             overflow-hidden bg-black/20 shadow-lg 
+             transition-all duration-300 hover:shadow-[0_8px_25px_rgba(220,38,38,0.6)]"
         style={{
-          backgroundImage: `url(https://image.tmdb.org/t/p/w500${item.backdrop_path})`, // Background image film
+          backgroundImage: `url(https://image.tmdb.org/t/p/w500${item.backdrop_path})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -48,24 +50,38 @@ const FavoriteView = () => {
         {/* Overlay gradient bawah */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60"></div>
 
-        {/* Konten di bawah card */}
-        <div className="absolute bottom-0 p-4 w-full z-10">
+        {/* Konten di bawah card → timbul naik dikit */}
+        <div
+          className="absolute bottom-0 p-4 w-full z-10 bg-black/30 backdrop-blur-sm
+               rounded-t-xl transform transition-all duration-300
+               group-hover:-translate-y-1"
+        >
           <h2 className="text-lg text-center font-semibold mb-2 text-white">
-            {item.original_title || item.title || item.name || item.original_name}
+            {item.original_title ||
+              item.title ||
+              item.name ||
+              item.original_name}
           </h2>
-          <p className="text-sm overflow-hidden transition-all duration-500 ease-in-out max-h-12 group-hover:max-h-40 text-center text-gray-300">
+          <p
+            className="text-sm overflow-hidden transition-all duration-500 ease-in-out 
+                  max-h-12 group-hover:max-h-40 text-center text-gray-300"
+          >
             {item.overview || "No overview available."}
           </p>
           <p className="text-white font-bold mt-2">
             ⭐ {item.vote_average?.toFixed(1)}
           </p>
           <p className="text-red-600 font-semibold mb-3">
-            {item.release_date ? `Release: ${item.release_date}` : `First Air: ${item.first_air_date}`}
+            {item.release_date
+              ? `Release: ${item.release_date}`
+              : `First Air: ${item.first_air_date}`}
           </p>
 
           {/* Tombol hapus */}
           <button
-            onClick={() => handleRemove(item.id, type === "film" ? "films" : "series")}
+            onClick={() =>
+              handleRemove(item.id, type === "film" ? "films" : "series")
+            }
             className="w-full py-1 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-md transition-all"
           >
             Hapus
@@ -73,7 +89,11 @@ const FavoriteView = () => {
         </div>
 
         {/* Area klik navigasi */}
-        <Link to={path} className="absolute inset-0 z-0" aria-label="View details"></Link>
+        <Link
+          to={path}
+          className="absolute inset-0 z-0"
+          aria-label="View details"
+        ></Link>
       </div>
     );
   };
@@ -84,13 +104,19 @@ const FavoriteView = () => {
       <h3 className="text-xl font-semibold mb-4 text-purple-400">{title}</h3>
 
       {items.length === 0 ? (
-        <p className="text-gray-400">Belum ada {type} favorit yang ditambahkan</p>
+        <p className="text-gray-400">
+          Belum ada {type} favorit yang ditambahkan
+        </p>
       ) : (
         <div className="relative">
           {/* Gradient kiri */}
-          <div className={`absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r ${fadeColor} to-transparent pointer-events-none z-10`} />
+          <div
+            className={`absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r ${fadeColor} to-transparent pointer-events-none z-10`}
+          />
           {/* Gradient kanan */}
-          <div className={`absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l ${fadeColor} to-transparent pointer-events-none z-10`} />
+          <div
+            className={`absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l ${fadeColor} to-transparent pointer-events-none z-10`}
+          />
 
           {/* Scroll horizontal */}
           <div className="overflow-x-auto scroll-smooth pb-4">
@@ -106,7 +132,11 @@ const FavoriteView = () => {
   // Tampilan loading
   if (loading) {
     return (
-      <div className={`flex justify-center items-center min-h-screen ${theme === "dark" ? "bg-[#1d232a] text-white" : "bg-white text-black"}`}>
+      <div
+        className={`flex justify-center items-center min-h-screen ${
+          theme === "dark" ? "bg-[#1d232a] text-white" : "bg-white text-black"
+        }`}
+      >
         <div className="flex flex-col items-center">
           <div className="w-10 h-10 border-4 border-t-transparent border-red-600 rounded-full animate-spin mb-3"></div>
           <p className="text-lg font-semibold">Memuat favoritmu...</p>
@@ -117,9 +147,17 @@ const FavoriteView = () => {
 
   // Tampilan utama
   return (
-    <div className={`relative px-0 py-3 min-h-screen ${theme === "dark" ? "bg-[#1d232a] text-white" : "bg-white text-gray-900"}`}>
+    <div
+      className={`relative px-0 py-3 min-h-screen ${
+        theme === "dark" ? "bg-[#1d232a] text-white" : "bg-white text-gray-900"
+      }`}
+    >
       <h1 className="text-2xl font-bold my-2 text-red-600">Favorite</h1>
-      <h2 className={`font-bold mb-6 ${theme === "dark" ? "text-white" : "text-black"}`}>
+      <h2
+        className={`font-bold mb-6 ${
+          theme === "dark" ? "text-white" : "text-black"
+        }`}
+      >
         Film & Series favoritmu tersimpan di sini
       </h2>
 
