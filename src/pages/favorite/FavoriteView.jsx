@@ -158,4 +158,4 @@ const FavoriteView = () => {
     );
 };
 
-export default FavoriteView;
+export default FavoriteView; // Export
