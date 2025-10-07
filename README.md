@@ -31,11 +31,9 @@ Detail Tim :
  -
 
 - Faldan
- -
- -
- -
- -
- -
+ - Mengerjakan halaman favorite
+ - Memikirkan logika di halaman favorite
+ - Meng-styling halaman favorite
 
 list halaman :
 - homepage
