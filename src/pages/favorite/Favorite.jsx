@@ -6,8 +6,6 @@ import { removeFavorite } from "../../reducer/favoriteReducer";
 import FavoriteView from "./FavoriteView";
 
 const Favorite = () => {
-  // 1. Perbaikan di sini: Ambil state.favorite, berikan default objek kosong ({}) 
-  //    jika 'state.favorite' belum terinisialisasi.
   const favoriteState = useSelector((state) => state.favorite || {});
   
   // 2. Perbaikan di sini: Destrukturisasi 'films', 'tvs', dan 'people'

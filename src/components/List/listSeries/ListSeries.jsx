@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../../service/api";
+import { useTheme } from "../../../context/ThemeContext";
+
+const IMG_BASE_URL = "https://image.tmdb.org/t/p/w500"; 
 
 const ListSeries = () => {
     const [series, setSeries] = useState([]);
@@ -8,6 +11,9 @@ const ListSeries = () => {
     const [sortBy, setSortBy] = useState("first_air_date.desc");
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false);
+    const { theme } = useTheme();
+
+    const bgColor = theme === 'dark' ? 'from-base-100' : 'from-base-100'; // Sesuaikan jika 'base-100' berubah berdasarkan tema
 
     const fetchSeries = async () => {
         setLoading(true);
@@ -26,6 +32,53 @@ const ListSeries = () => {
     useEffect(() => {
         fetchSeries();
     }, [page, sortBy]);
+
+    const renderCard = (serie) => {
+        const imageUrl = serie.poster_path
+            ? `${IMG_BASE_URL}${serie.poster_path}`
+            : `https://via.placeholder.com/256x384?text=No+Image`;
+        
+        const rating = serie.vote_average?.toFixed(1) || 'N/A';
+        const title = serie.original_name;
+        const overview = serie.overview;
+
+        return (
+            <div
+                key={serie.id}
+                className="carousel-item w-64 relative rounded-lg overflow-hidden shadow-md transform transition duration-300
+                           group hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-600/50"
+            >
+                <Link 
+                    to={`/series/${serie.id}`} 
+                    className="block relative w-full h-full"
+                >
+                    {/* Image */}
+                    <img
+                        src={imageUrl}
+                        alt={title}
+                        className="w-full h-full object-cover rounded-lg aspect-[2/3]" 
+                        onError={(e) => { e.target.src = `https://via.placeholder.com/256x384?text=Error+Loading`; }}
+                    />
+                    
+                    {/* Tag Header */}
+                    <span className="absolute top-0 left-0 bg-red-900 text-xs px-2 py-1 rounded-br-lg z-10 text-white font-semibold">
+                        Series
+                    </span>
+                    
+                    {/* Overlay Interaktif Saat Hover (Tanpa ikon play) */}
+                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 text-white">
+                        <h3 className="text-xl font-extrabold mb-1 line-clamp-2">{title}</h3>
+                        <p className="text-yellow-400 text-lg flex items-center mb-2">
+                            <span className="mr-1">⭐</span> {rating}
+                        </p>
+                        <p className="text-sm text-gray-300 line-clamp-3">
+                            {overview || "No overview available."}
+                        </p>
+                    </div>
+                </Link>
+            </div>
+        );
+    }
 
     return (
         <div className="p-4 container mx-auto">
@@ -53,68 +106,45 @@ const ListSeries = () => {
                     <span className="loading loading-spinner loading-lg text-red-900"></span>
                 </div>
             ) : (
-                <div className="overflow-x-auto p-4 -mx-4">
-                    <div className="carousel w-full space-x-4 pb-2">
-                        {series.map((serie) => {
-                            const imageUrl = serie.poster_path
-                                ? `https://image.tmdb.org/t/p/w500${serie.poster_path}`
-                                : serie.backdrop_path
-                                ? `https://image.tmdb.org/t/p/w500${serie.backdrop_path}`
-                                : `https://via.placeholder.com/256x320?text=No+Image`;
-                            
-                            const rating = serie.vote_average?.toFixed(1) || 'N/A';
-
-                            return (
-                                <div
-                                    key={serie.id}
-                                    className="carousel-item w-64 relative bg-black text-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transform transition hover:scale-105 hover:-translate-y-2"
-                                >
-                                    <Link to={`/series/${serie.id}`} className="block h-full">
-                                        <span className="absolute top-2 left-2 bg-red-900 text-xs px-2 py-1 rounded z-10">
-                                            📺 Series
-                                        </span>
-                                        <img
-                                            src={imageUrl}
-                                            alt={serie.original_name}
-                                            // Ketinggian gambar diperbaiki ke h-80
-                                            className="rounded-t-lg w-80 h-80 object-cover transition-transform duration-300 hover:scale-110" 
-                                            onError={(e) => { e.target.src = `https://via.placeholder.com/256x320?text=Error+Loading`; }}
-                                        />
-                                        <div className="p-3">
-                                            {/* ✅ PERBAIKAN: Hapus class 'truncate' agar judul wrap */}
-                                            <h3 className="font-bold line-clamp-2">{serie.original_name}</h3> 
-                                            <p className="text-yellow-400">⭐ {rating}</p>
-                                            <p className="text-sm text-gray-400">
-                                                First Air: {serie.first_air_date || 'N/A'}
-                                            </p>
-                                        </div>
-                                    </Link>
-                                </div>
-                            );
-                        })}
+                <>
+                    <div className="relative">
+                        {/* GRADIENT KIRI */}
+                        <div
+                            className={`absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r ${bgColor} to-transparent pointer-events-none z-10`}
+                        />
+                        
+                        {/* GRADIENT KANAN */}
+                        <div
+                            className={`absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l ${bgColor} to-transparent pointer-events-none z-10`}
+                        />
+                        
+                        <div className="overflow-x-auto scroll-smooth pb-2 px-4">
+                            <div className="flex space-x-6 relative z-0">
+                                {series.map(renderCard)}
+                            </div>
+                        </div>
                     </div>
-                </div>
+                    <div className="flex justify-center mt-6 gap-2">
+                        <button
+                            disabled={page === 1 || loading}
+                            onClick={() => setPage((p) => p - 1)}
+                            className="px-3 py-1 bg-red-900 text-white rounded disabled:opacity-50"
+                        >
+                            Prev
+                        </button>
+                        <span className="text-red-900 font-bold flex items-center">
+                            {page} / {totalPages}
+                        </span>
+                        <button
+                            disabled={page === totalPages || loading}
+                            onClick={() => setPage((p) => p + 1)}
+                            className="px-3 py-1 bg-red-900 text-white rounded disabled:opacity-50"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </>
             )}
-
-            <div className="flex justify-center mt-6 gap-2">
-                <button
-                    disabled={page === 1 || loading}
-                    onClick={() => setPage((p) => p - 1)}
-                    className="px-3 py-1 bg-red-900 text-white rounded disabled:opacity-50"
-                >
-                    Prev
-                </button>
-                <span className="text-red-900 font-bold flex items-center">
-                    {page} / {totalPages}
-                </span>
-                <button
-                    disabled={page === totalPages || loading}
-                    onClick={() => setPage((p) => p + 1)}
-                    className="px-3 py-1 bg-red-900 text-white rounded disabled:opacity-50"
-                >
-                    Next
-                </button>
-            </div>
         </div>
     );
 };

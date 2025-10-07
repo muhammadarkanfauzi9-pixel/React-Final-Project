@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../../service/api";
+import { useTheme } from "../../../context/ThemeContext";
+
+const IMG_BASE_URL = "https://image.tmdb.org/t/p/w500"; 
 
 const ListMovie = () => {
     const [movies, setMovies] = useState([]);
@@ -8,6 +11,10 @@ const ListMovie = () => {
     const [sortBy, setSortBy] = useState("release_date.desc");
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false);
+    const {theme} = useTheme;
+
+    // Catatan: bgColor tidak digunakan, tapi jika digunakan, pastikan adaptif.
+    // const bgColor = theme === 'dark' ? 'from-base-100' : 'from-base-100'; 
 
     const fetchMovies = async () => {
         setLoading(true);
@@ -16,7 +23,8 @@ const ListMovie = () => {
                 params: { page, sort_by: sortBy },
             });
             setMovies(res.data.results);
-            setTotalPages(res.data.total_pages);
+            // Batasi totalPages agar tidak terlalu besar di UI
+            setTotalPages(Math.min(res.data.total_pages, 500)); 
         } catch (err) {
             console.error(err);
         }
@@ -26,96 +34,171 @@ const ListMovie = () => {
     useEffect(() => {
         fetchMovies();
     }, [page, sortBy]);
+    
+    // Fungsi pembantu untuk mendapatkan label dari nilai sortBy
+    const getSortLabel = (key) => {
+        switch (key) {
+            case "release_date.desc": return "Terbaru → Terlama";
+            case "release_date.asc": return "Terlama → Terbaru";
+            case "vote_average.desc": return "Rating Tertinggi";
+            case "popularity.desc": return "Paling Populer";
+            default: return "Sort By";
+        }
+    }
+
+    const renderCard = (movie) => {
+        const rating = movie.vote_average?.toFixed(1) || 'N/A';
+        const title = movie.original_title;
+        const overview = movie.overview;
+        const imageUrl = movie.poster_path
+            ? `${IMG_BASE_URL}${movie.poster_path}`
+            : `https://via.placeholder.com/256x384?text=No+Image`;
+
+        return (
+            <div
+                key={movie.id}
+                className="w-40 md:w-48 lg:w-56 flex-shrink-0 relative rounded-lg overflow-hidden shadow-md transform transition duration-300
+                            group hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-600/50"
+            >
+                <Link 
+                    to={`/film/${movie.id}`} 
+                    className="block relative w-full h-full"
+                >
+                    {/* Image */}
+                    <img
+                        src={imageUrl}
+                        alt={title}
+                        className="w-full h-full object-cover rounded-lg aspect-[2/3]" 
+                        onError={(e) => { e.target.src = `https://via.placeholder.com/256x384?text=Error+Loading`; }}
+                    />
+                    
+                    {/* Tag Header */}
+                    <span className="absolute top-0 left-0 bg-red-700 text-xs px-2 py-1 rounded-br-lg z-10 text-white font-semibold">
+                        Movie
+                    </span>
+                    
+                    {/* Overlay Interaktif Saat Hover */}
+                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 text-white">
+                        <h3 className="text-xl font-extrabold mb-1 line-clamp-2">{title}</h3>
+                        <p className="text-yellow-400 text-lg flex items-center mb-2">
+                            <span className="mr-1">⭐</span> {rating}
+                        </p>
+                        <p className="text-sm text-gray-300 line-clamp-3">
+                            {overview || "No overview available."}
+                        </p>
+                    </div>
+                </Link>
+            </div>
+        );
+    }
+
+    // Fungsi untuk mengubah sortBy dan mereset page ke 1
+    const handleSortChange = (newSortBy) => {
+        setPage(1);
+        setSortBy(newSortBy);
+    };
+
+    // Daftar opsi sorting
+    const sortOptions = [
+        { value: "release_date.desc", label: "Terbaru → Terlama" },
+        { value: "release_date.asc", label: "Terlama → Terbaru" },
+        { value: "vote_average.desc", label: "Rating Tertinggi" },
+        { value: "popularity.desc", label: "Paling Populer" },
+    ];
 
     return (
         <div className="p-4 container mx-auto">
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-                <h2 className="text-2xl font-bold flex items-center gap-2 text-red-900">
+                <h2 className="text-2xl font-bold flex items-center gap-2 text-red-700">
                     🎬 List Movies
                 </h2>
-                <select
-                    value={sortBy}
-                    onChange={(e) => {
-                        setPage(1);
-                        setSortBy(e.target.value);
-                    }}
-                    className="border px-2 py-1 rounded bg-black text-white border-red-900"
-                >
-                    <option value="release_date.desc">Terbaru → Terlama</option>
-                    <option value="release_date.asc">Terlama → Terbaru</option>
-                    <option value="vote_average.desc">Rating Tertinggi</option>
-                    <option value="popularity.desc">Paling Populer</option>
-                </select>
+                
+                {/* 👇 DROPDOWN AESTHETIC BARU */}
+                <div className="dropdown dropdown-end">
+                    
+                    {/* Tombol Dropdown */}
+                    <div tabIndex={0} role="button" className="
+                        btn btn-sm text-sm border-2 border-red-700 
+                        bg-transparent text-base-content 
+                        hover:bg-red-700 hover:text-white transition duration-300
+                    ">
+                        {getSortLabel(sortBy)}
+                        
+                        {/* Ikon panah ke bawah */}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-chevron-down" viewBox="0 0 16 16">
+                          <path fillRule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+                        </svg>
+                    </div>
+
+                    {/* Isi Dropdown (Menu) */}
+                    <ul tabIndex={0} className="
+                        dropdown-content z-[1] menu p-2 shadow-xl rounded-box w-52 
+                        bg-base-300 text-base-content /* Latar belakang dan teks adaptif tema */
+                    ">
+                        {sortOptions.map(option => (
+                            <li key={option.value}>
+                                <a 
+                                    onClick={() => handleSortChange(option.value)}
+                                    className={
+                                        sortBy === option.value 
+                                            ? "active bg-red-700 text-white" 
+                                            : "hover:bg-red-700 hover:text-white"
+                                    }
+                                >
+                                    {option.label}
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+                {/* 👆 AKHIR DROPDOWN */}
             </div>
 
             {loading ? (
                 <div className="flex justify-center items-center h-80">
-                    <span className="loading loading-spinner loading-lg text-red-900"></span>
+                    <span className="loading loading-spinner loading-lg text-red-700"></span>
                 </div>
             ) : (
-                <div className="overflow-x-auto p-4 -mx-4">
-                    <div className="carousel w-full space-x-4 pb-2">
-                        {movies.map((movie) => {
-                            const imageUrl = movie.poster_path
-                                ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-                                : movie.backdrop_path
-                                ? `https://image.tmdb.org/t/p/w500${movie.backdrop_path}`
-                                : `https://via.placeholder.com/256x320?text=No+Image`;
+                <>
+                    <div className="relative">
+                        {/* GRADIENT KIRI - Disesuaikan agar adaptif */}
+                        <div
+                            className={`absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-base-100 to-transparent pointer-events-none z-10`}
+                        />
+                        
+                        {/* GRADIENT KANAN - Disesuaikan agar adaptif */}
+                        <div
+                            className={`absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-base-100 to-transparent pointer-events-none z-10`}
+                        />
 
-                            const rating = movie.vote_average?.toFixed(1) || 'N/A';
-
-                            return (
-                                <div
-                                    key={movie.id}
-                                    // ✅ Ketinggian card dihapus/disederhanakan. Hanya w-64 yang diperlukan
-                                    className="carousel-item w-64 relative bg-black text-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transform transition hover:scale-105 hover:-translate-y-2"
-                                >
-                                    <Link to={`/film/${movie.id}`} className="block h-full">
-                                        <span className="absolute top-2 left-2 bg-red-900 text-xs px-2 py-1 rounded z-10">
-                                            🎬 Movie
-                                        </span>
-                                        <img
-                                            src={imageUrl}
-                                            alt={movie.original_title}
-                                            // Ketinggian gambar sudah benar (h-80)
-                                            className="rounded-t-lg w-80 h-80 object-cover transition-transform duration-300 hover:scale-110"
-                                            onError={(e) => { e.target.src = `https://via.placeholder.com/256x320?text=Error+Loading`; }}
-                                        />
-                                        <div className="p-3">
-                                            {/* ✅ PERBAIKAN: Hapus class 'truncate' agar judul wrap */}
-                                            <h3 className="font-bold line-clamp-2">{movie.original_title}</h3>
-                                            <p className="text-yellow-400">⭐ {rating}</p>
-                                            <p className="text-sm text-gray-400">
-                                                Release: {movie.release_date || 'N/A'}
-                                            </p>
-                                        </div>
-                                    </Link>
-                                </div>
-                            );
-                        })}
+                        {/* Mengganti 'carousel' dengan grid/flex agar sesuai dengan tampilan umum list */}
+                        <div className="overflow-x-auto scroll-smooth pb-2 px-4">
+                            <div className="flex space-x-4 pb-2">
+                                {movies.map(renderCard)}
+                            </div>
+                        </div>
                     </div>
-                </div>
+                    <div className="flex justify-center mt-6 gap-2">
+                        <button
+                            disabled={page === 1 || loading}
+                            onClick={() => setPage((p) => p - 1)}
+                            className="px-3 py-1 bg-red-700 text-white rounded disabled:opacity-50 hover:bg-red-600 transition"
+                        >
+                            Prev
+                        </button>
+                        <span className="text-base-content font-bold flex items-center">
+                            {page} / {totalPages}
+                        </span>
+                        <button
+                            disabled={page === totalPages || loading}
+                            onClick={() => setPage((p) => p + 1)}
+                            className="px-3 py-1 bg-red-700 text-white rounded disabled:opacity-50 hover:bg-red-600 transition"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </>
             )}
-
-            <div className="flex justify-center mt-6 gap-2">
-                <button
-                    disabled={page === 1 || loading}
-                    onClick={() => setPage((p) => p - 1)}
-                    className="px-3 py-1 bg-red-900 text-white rounded disabled:opacity-50"
-                >
-                    Prev
-                </button>
-                <span className="text-red-900 font-bold flex items-center">
-                    {page} / {totalPages}
-                </span>
-                <button
-                    disabled={page === totalPages || loading}
-                    onClick={() => setPage((p) => p + 1)}
-                    className="px-3 py-1 bg-red-900 text-white rounded disabled:opacity-50"
-                >
-                    Next
-                </button>
-            </div>
         </div>
     );
 };

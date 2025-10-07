@@ -1,6 +1,12 @@
+// src/App.jsx
 import React, { useState } from "react";
-import { Routes, Route, Link, useParams } from "react-router-dom"; // 👈 Import useParams
-import { useTheme } from "./context/ThemeContext"; 
+import {
+  Routes,
+  Route,
+  Link,
+  useParams,
+} from "react-router-dom";
+import { useTheme } from "./context/ThemeContext";
 
 // Pages
 import Home from "./pages/Home/Home";
@@ -14,104 +20,84 @@ import ListMovie from "./components/List/listMovie/ListMovie";
 import ListSeries from "./components/List/listSeries/ListSeries";
 import ListTrending from "./components/List/listTrending/ListTrending";
 import ListNowPlaying from "./components/List/listNowPlaying/ListNowPlaying";
-import Store from "./store/store";
 
-// 💡 KUNCI PERBAIKAN: Komponen Wrapper untuk memaksa render ulang FilmDetail
+// Komponen Wrapper untuk memaksa render ulang FilmDetail
 const FilmDetailWrapper = () => {
-    const { id } = useParams();
-    // Melewatkan id sebagai key. Ketika id berubah, FilmDetail akan di-mount ulang.
-    return <FilmDetail key={id} />; 
+  const { id } = useParams();
+  return <FilmDetail key={id} />;
 };
 
 function App() {
-    const { theme, toggleTheme } = useTheme();
-    const [isMuted, setIsMuted] = useState(true);
+  const { theme } = useTheme();
+  const [isMuted, setIsMuted] = useState(true);
 
-    const toggleSound = () => {
-        const iframe = document.getElementById("ytPlayer");
-        if (!iframe) return;
+  const toggleSound = () => {
+    const iframe = document.getElementById("ytPlayer");
 
-        iframe.contentWindow.postMessage(
-            JSON.stringify({
-                event: "command",
-                func: isMuted ? "unMute" : "mute",
-                args: [],
-            }),
-            "*"
-        );
+    if (!iframe) {
+      console.warn("Iframe ytPlayer not found.");
+      setIsMuted(!isMuted);
+      return;
+    }
 
-        setIsMuted(!isMuted);
-    };
+    const funcToCall = isMuted ? "unMute" : "mute";
 
-    return (
-        <div
-            className="min-h-screen transition-colors duration-300 bg-base-100 text-base-content"
-        >
-            
-            <header className="p-4 flex justify-between items-center shadow-md bg-base-200 text-base-content">
-                <h1 className="text-2xl font-bold">
-                    <span className="text-white ">Bios</span>
-                    <span className="text-red-600">Kocak</span>
-                </h1>
+    setTimeout(() => {
+      iframe.contentWindow.postMessage(
+        JSON.stringify({
+          event: "command",
+          func: funcToCall,
+          args: [],
+        }),
+        "*"
+      );
+    }, isMuted ? 50 : 0);
 
-                <nav className="flex gap-3">
-                    <Link to="/" className="btn btn-sm btn-ghost hover:text-red-700">
-                        Home
-                    </Link>
-                    <Link to="/favorite" className="btn btn-sm btn-ghost hover:text-red-700">
-                        Favorite
-                    </Link>
-                    <Link to="/search" className="btn btn-sm btn-ghost hover:text-red-700">
-                        Search
-                    </Link>
-                </nav>
+    setIsMuted(!isMuted);
+  };
 
-                <div className="flex gap-2">
-                    <label className="swap swap-rotate btn btn-ghost btn-circle">
-                        <input 
-                            type="checkbox" 
-                            checked={!isMuted} 
-                            onChange={toggleSound} 
-                            className="toggle toggle-sm toggle-error"
-                        />
-            
-                        <span className="swap-on text-2xl">🔊</span>
-            
-                        <span className="swap-off text-2xl">🔇</span>
-                    </label>
+  return (
+    <div className="min-h-screen transition-colors duration-300 bg-base-100 text-base-content">
+      {/* HEADER */}
+      <header className="sticky top-0 z-40 p-4 flex justify-between items-center shadow-md bg-base-200 text-base-content">
+        <h1 className="text-2xl font-bold">
+          <span className={theme === "dark" ? "text-white" : "text-gray-900"}>
+            Bios
+          </span>
+          <span className="text-red-600">Kocak</span>
+        </h1>
 
-                    <label className="swap swap-rotate btn btn-ghost btn-circle">
-                    <input 
-                        type="checkbox" 
-                        checked={theme === "dark"} 
-                        onChange={toggleTheme}
-                        
-                        className="toggle toggle-sm toggle-error"
-                        />
-                        <span className="swap-off text-2xl">🌙</span> 
-                        <span className="swap-on text-2xl">☀️</span>
-                    </label>
-                </div>
-            </header>
+        <nav className="flex gap-3">
+          <Link to="/" className="btn btn-sm btn-ghost hover:text-red-700">
+            Home
+          </Link>
+          <Link to="/favorite" className="btn btn-sm btn-ghost hover:text-red-700">
+            Favorite
+          </Link>
+          <Link to="/search" className="btn btn-sm btn-ghost hover:text-red-700">
+            Search
+          </Link>
+        </nav>
 
-            <main className="">
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    
-                    {/* ✅ Ganti FilmDetail dengan FilmDetailWrapper */}
-                    <Route path="/film/:id" element={<FilmDetailWrapper />} />
-                    
-                    <Route path="/series/:id" element={<SeriesDetail />} />
-                    <Route path="/favorite" element={<Favorite />} />
-                    <Route path="/search" element={<Cari />} />
-                    <Route path="/movies" element={<ListMovie />} />
-                    <Route path="/series" element={<ListSeries />} />
-                    <Route path="/trending" element={<ListTrending />} />
-                    <Route path="/now-playing" element={<ListNowPlaying />} />
-                </Routes>
-            </main>
-        </div>
-    );
+        <div className="w-[100px] h-0 md:h-auto md:w-auto"></div>
+      </header>
+
+      {/* ROUTES */}
+      <main>
+        <Routes>
+          <Route path="/" element={<Home isMuted={isMuted} toggleSound={toggleSound} />} />
+          <Route path="/film/:id" element={<FilmDetailWrapper />} />
+          <Route path="/series/:id" element={<SeriesDetail />} />
+          <Route path="/favorite" element={<Favorite />} />
+          <Route path="/search" element={<Cari />} />
+          <Route path="/movies" element={<ListMovie />} />
+          <Route path="/series" element={<ListSeries />} />
+          <Route path="/trending" element={<ListTrending />} />
+          <Route path="/now-playing" element={<ListNowPlaying />} />
+        </Routes>
+      </main>
+    </div>
+  );
 }
 
 export default App;
