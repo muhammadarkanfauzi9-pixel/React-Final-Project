@@ -4,9 +4,9 @@ Ketua Tim : M. Arkan Fauzi
 
 Detail Tim : 
 -  Hani
-  - mengerjakan di masing masing components details seperti similar film, casting, dan deskripsi film
-  -  mengerjakan logic untuk detail film
-  - mengerjakan tampilan detail film
+   - mengerjakan di masing masing components details seperti similar film, casting, dan deskripsi film
+   - mengerjakan logic untuk detail film
+   - mengerjakan tampilan detail film
 
  - Arkan
     - Menciptakan environment untuk final projek dari penyiapan tools seperti redux, tailwind dll
