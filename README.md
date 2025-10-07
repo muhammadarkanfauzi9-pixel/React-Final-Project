@@ -28,6 +28,7 @@ Detail Tim :
 - Membuat fitur trailer popup dan zoom gambar pada hasil pencarian
 - Menyusun struktur tampilan: form pencarian dan notifikasi
 
+
 - Faldan
  - Mengerjakan halaman favorite
  - Memikirkan logika di halaman favorite
