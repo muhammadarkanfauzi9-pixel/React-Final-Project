@@ -4,35 +4,40 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 
-// 🌟 Import instance Axios yang sudah dikonfigurasi 🌟
-import api from "../../service/api"; // Sesuaikan path import ini
+// Import instance Axios yang sudah dikonfigurasi
+import api from "../../service/api"; 
 
-// Key untuk menyimpan kategori di LocalStorage
+// Key untuk menyimpan kategori pencarian terakhir di LocalStorage
 const CATEGORY_STORAGE_KEY = "lastSearchCategory";
 
 const Cari = () => {
     const { theme } = useTheme();
 
+    // State untuk kontrol input dan hasil
     const [query, setQuery] = useState("");
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
     const [notif, setNotif] = useState("");
-    const [trailerKey, setTrailerKey] = useState(null);
-    const [showTrailer, setShowTrailer] = useState(false);
-    const [zoomImage, setZoomImage] = useState(null);
+    const [zoomImage, setZoomImage] = useState(null); // State untuk modal zoom gambar (belum digunakan)
 
-    // Dapatkan kategori tersimpan dari LocalStorage atau gunakan 'movie' sebagai default
+    // Mengambil kategori tersimpan dari LocalStorage atau default ke 'movie'
     const savedCategory = localStorage.getItem(CATEGORY_STORAGE_KEY) || "movie";
 
-    const [searchType, setSearchType] = useState(savedCategory); 
+    // State untuk kategori pencarian ('movie', 'tv', 'multi')
+    const [searchType, setSearchType] = useState(savedCategory);
+    
+    // State untuk pagination
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [isInitialLoad, setIsInitialLoad] = useState(true); 
+    
+    // State untuk membedakan antara mode "Populer" dan "Cari"
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
 
     const IMG_URL = "https://image.tmdb.org/t/p/w500";
 
     const isDark = theme === "dark";
 
+    // Objek untuk mengelola kelas Tailwind berdasarkan tema
     const themeClasses = {
         bgPrimary: isDark ? "bg-gray-900" : "bg-gray-100",
         textPrimary: isDark ? "text-white" : "text-gray-900",
@@ -46,18 +51,18 @@ const Cari = () => {
         sidebarHover: isDark ? "hover:bg-red-700 hover:text-white" : "hover:bg-red-100 hover:text-red-700",
     };
     
-    // --- FUNGSI MENGAMBIL DATA AWAL (POPULER) ---
+    // --- FUNGSI UTAMA: Mengambil data Populer (Jika query kosong) ---
     const fetchInitialData = async (typeToFetch, pageToFetch = 1) => {
+        // Jika 'multi' dipilih, gunakan 'movie' populer untuk tampilan awal
         if (typeToFetch === 'multi') typeToFetch = 'movie'; 
         
         setIsInitialLoad(true);
         setLoading(true);
         try {
             const res = await api.get(`/${typeToFetch}/popular`, {
-                params: { 
+                params: {
                     language: "en-US",
                     page: pageToFetch,
-                    // Filter Konten Dewasa
                     include_adult: false 
                 },
             });
@@ -72,34 +77,33 @@ const Cari = () => {
             setTimeout(() => setNotif(""), 3000);
         } finally {
             setLoading(false);
-            window.scrollTo(0, 0); 
+            window.scrollTo(0, 0); // Gulir ke atas halaman
         }
     };
     
-    // --- FUNGSI PENCARIAN (HANYA JIKA ADA INPUT QUERY) ---
+    // --- FUNGSI UTAMA: Melakukan Pencarian (Jika ada input query) ---
     const executeSearch = async (pageToFetch = 1, currentSearchType = searchType) => {
+        // Jika query kosong, muat data populer
         if (!query.trim()) {
-             fetchInitialData(currentSearchType, 1); 
-             return;
+            fetchInitialData(currentSearchType, 1);
+            return;
         }
 
-        setIsInitialLoad(false); 
+        setIsInitialLoad(false);
         setLoading(true);
         try {
-            
             const endpoint = `/search/${currentSearchType}`;
             
             const res = await api.get(endpoint, {
-                params: { 
-                    query, 
+                params: {
+                    query,
                     language: "en-US",
                     page: pageToFetch,
-                    // Filter Konten Dewasa
                     include_adult: false 
                 },
             });
 
-            // Hanya filter 'person' jika searchType adalah 'multi' (search multi juga menyertakan filter adult)
+            // Filter tipe 'person' (aktor/kru) jika menggunakan mode 'multi'
             const searchResults = currentSearchType === 'multi'
                 ? res.data.results.filter(item => item.media_type !== 'person')
                 : res.data.results;
@@ -110,7 +114,7 @@ const Cari = () => {
             if (searchResults.length === 0) {
                 setNotif(`❌ Tidak ada hasil untuk "${query}" pada kategori ${currentSearchType.toUpperCase()}`);
                 setResults([]);
-                setTotalPages(1); 
+                setTotalPages(1);
                 setTimeout(() => setNotif(""), 3000);
             } else {
                 setResults(searchResults || []);
@@ -121,76 +125,52 @@ const Cari = () => {
             setTimeout(() => setNotif(""), 3000);
         } finally {
             setLoading(false);
-            window.scrollTo(0, 0); 
+            window.scrollTo(0, 0); // Gulir ke atas halaman
         }
     };
 
-    // Dipanggil saat submit form
+    // Handler saat form pencarian disubmit
     const handleSearch = (e) => {
         if (e) e.preventDefault();
-        setCurrentPage(1); 
-        executeSearch(1); 
+        setCurrentPage(1); // Reset ke halaman 1
+        executeSearch(1);
     };
     
     // Handler untuk mengubah kategori dari sidebar
     const handleCategoryChange = (newType) => {
         setSearchType(newType);
-        localStorage.setItem(CATEGORY_STORAGE_KEY, newType); 
+        localStorage.setItem(CATEGORY_STORAGE_KEY, newType); // Simpan kategori
         setCurrentPage(1);
 
         if (!query.trim()) {
+            // Jika kolom pencarian kosong, muat data populer
             setIsInitialLoad(true);
-            fetchInitialData(newType, 1); 
+            fetchInitialData(newType, 1);
         } else {
+            // Jika ada query, jalankan ulang pencarian dengan tipe baru
             setIsInitialLoad(false);
-            executeSearch(1, newType); 
+            executeSearch(1, newType);
         }
     }
     
-    // --- EFFECT: MEMUAT DATA AWAL BERDASARKAN KATEGORI TERAKHIR YANG TERSIMPAN ---
+    // --- useEffect: Memuat data awal saat komponen pertama kali di-mount ---
     useEffect(() => {
-        fetchInitialData(searchType, 1); 
+        fetchInitialData(searchType, 1);
     }, []); 
 
-    // --- EFFECT: MENGULANG PENCARIAN/PENGAMBILAN DATA KETIKA PAGE BERUBAH ---
+    // --- useEffect: Mengulang pencarian/pengambilan data saat halaman (currentPage) berubah ---
     useEffect(() => {
-        if (currentPage !== 1) {
+        if (currentPage !== 1) { // Mencegah double fetch pada inisialisasi awal
             if (query.trim()) {
                 executeSearch(currentPage);
             } else {
-                fetchInitialData(searchType, currentPage); 
+                fetchInitialData(searchType, currentPage);
             }
         }
-    }, [currentPage]); 
+    }, [currentPage]);
 
-    const getTrailer = async (itemId, mediaType) => {
-        const type = mediaType === 'movie' ? 'movie' : 'tv';
-        
-        try {
-            // Gunakan api.get, hanya kirim language
-            const res = await api.get(`/${type}/${itemId}/videos`, {
-                params: { 
-                    language: "en-US",
-                    // Tidak wajib di sini, tapi konsisten lebih baik
-                    include_adult: false 
-                },
-            });
-            const trailer = res.data.results.find(
-                (vid) => vid.site === "YouTube" && vid.type === "Trailer"
-            );
-            if (trailer) {
-                setTrailerKey(trailer.key);
-                setShowTrailer(true);
-            } else {
-                setNotif(`⚠ Trailer ${mediaType === 'movie' ? 'Film' : 'Series'} tidak tersedia.`);
-                setTimeout(() => setNotif(""), 3000);
-            }
-        } catch {
-            setNotif("⚠ Gagal memuat trailer.");
-            setTimeout(() => setNotif(""), 3000);
-        }
-    };
 
+    // Komponen Pesan Hasil Kosong
     const emptyResultMessage = (
         <div className="text-center py-20">
             <h2 className={`text-2xl font-bold ${themeClasses.textPrimary}`}>
@@ -202,7 +182,7 @@ const Cari = () => {
         </div>
     );
     
-    // Komponen Sidebar Kategori
+    // Komponen Sidebar untuk Filter Kategori
     const SidebarCategory = () => {
         const categories = [
             { type: 'movie', name: 'Film Populer/Cari' },
@@ -241,14 +221,15 @@ const Cari = () => {
 
     return (
         <div className={`px-4 ${themeClasses.bgPrimary} min-h-screen ${themeClasses.textPrimary} pb-10`}>
-            {/* notif */}
+            
+            {/* Notifikasi Pop-up (di tengah layar) */}
             {notif && (
                 <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-yellow-400 text-black font-semibold px-6 py-3 rounded-lg shadow-lg z-50">
                     {notif}
                 </div>
             )}
 
-            {/* search form */}
+            {/* Form Pencarian */}
             <form
                 onSubmit={handleSearch}
                 className="flex justify-center items-center gap-2 mb-8 pt-6 pb-2"
@@ -271,22 +252,24 @@ const Cari = () => {
 
             {/* TATA LETAK UTAMA: SIDEBAR DAN HASIL */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                {/* Kolom 1: Sidebar Kategori (Lebar 1/4) */}
+                
+                {/* Kolom 1: Sidebar Kategori */}
                 <div className="lg:col-span-1">
                     <SidebarCategory />
                 </div>
 
-                {/* Kolom 2: Hasil Pencarian (Lebar 3/4) */}
+                {/* Kolom 2: Hasil Pencarian/Populer */}
                 <div className="lg:col-span-3">
-                    {/* loading */}
-                    {loading && <p className="text-center">⏳ Sedang memuat data...</p>}
+                    {/* Indikator Loading */}
+                    {loading && <p className="text-center p-10">⏳ Sedang memuat data...</p>}
 
-                    {/* HASIL PENCARIAN (GRID/PESAN) */}
+                    {/* Tampilkan Hasil (Grid) atau Pesan Kosong */}
                     {!loading && (
                         results.length > 0 ? (
                             <>
+                                {/* Info Judul dan Halaman */}
                                 <div className="text-left mb-4">
-                                     <h3 className={`text-xl font-semibold ${themeClasses.textPrimary}`}>
+                                   <h3 className={`text-xl font-semibold ${themeClasses.textPrimary}`}>
                                         {isInitialLoad 
                                             ? `Populer ${searchType === 'tv' ? 'Series' : 'Film'}` 
                                             : `Hasil Pencarian "${query}" (${searchType.toUpperCase()})`}
@@ -296,76 +279,61 @@ const Cari = () => {
                                     </p>
                                 </div>
                                 
+                                {/* Grid Hasil */}
                                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
                                     {results.map((item) => {
+                                        // Tentukan tipe media (movie/tv), utamakan media_type dari 'multi'
                                         const mediaType = item.media_type || (searchType === 'tv' ? 'tv' : 'movie');
                                         const isMovie = mediaType === 'movie';
-                                        // Menggunakan original_title/name, sama seperti di ListMovie
+                                        
+                                        // Ambil Judul yang sesuai
                                         const titleText = isMovie ? item.original_title || item.title : item.name;
-                                        const releaseDate = isMovie ? item.release_date : item.first_air_date;
+                                        
+                                        // Tentukan path Link
                                         const linkPath = isMovie ? `/film/${item.id}` : `/series/${item.id}`;
                                         const rating = item.vote_average?.toFixed(1) || 'N/A';
                                         
+                                        // Tentukan URL Poster
                                         const imageUrl = item.poster_path
                                             ? `${IMG_URL}${item.poster_path}`
                                             : `https://via.placeholder.com/500x750?text=No+Image`;
                                         
                                         const mediaLabel = isMovie ? 'FILM' : 'SERIES';
 
-
                                         return (
-                                            // Menggunakan Card Style dari ListMovie
                                             <div
                                                 key={item.id}
-                                                className={`relative rounded-lg overflow-hidden shadow-md transform transition duration-300 ${themeClasses.bgSecondary}`}
+                                                className="relative rounded-lg overflow-hidden shadow-md transform transition duration-300 group hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-600/50"
                                             >
-                                                <Link 
-                                                    to={linkPath} 
-                                                    className="block group relative w-full h-full transform transition duration-300 hover:scale-[1.03] hover:shadow-xl"
+                                                <Link
+                                                    to={linkPath}
+                                                    className="block group relative w-full h-full"
                                                 >
-                                                    {/* Image */}
+                                                    {/* Image Poster */}
                                                     <img
                                                         src={imageUrl}
                                                         alt={titleText}
-                                                        // Menggunakan aspect-[2/3] agar konsisten
-                                                        className="w-full h-full object-cover rounded-lg aspect-[2/3]" 
+                                                        // Gunakan rasio aspek 2/3 untuk konsistensi poster
+                                                        className="w-full h-full object-cover rounded-lg aspect-[2/3]"
                                                         onError={(e) => { e.target.src = `https://via.placeholder.com/500x750?text=Error+Loading`; }}
                                                     />
                                                     
-                                                    {/* Tag Header */}
-                                                    <span className="absolute top-0 left-0 bg-red-500 text-xs px-2 py-1 rounded-br-lg z-10 text-white font-semibold">
+                                                    {/* Tag Tipe Media */}
+                                                    <span className="absolute top-0 left-0 bg-red-900 text-xs px-2 py-1 rounded-br-lg z-10 text-white font-semibold">
                                                         {mediaLabel}
                                                     </span>
                                                     
                                                     {/* Overlay Interaktif Saat Hover */}
-                                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 text-white">
-                                                        <h3 className="text-sm md:text-xl font-extrabold mb-1 line-clamp-2">{titleText}</h3>
-                                                        <p className="text-yellow-400 text-sm md:text-lg flex items-center">
+                                                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 text-white">
+                                                        <h3 className="text-xl font-extrabold mb-1 line-clamp-2">{titleText}</h3>
+                                                        <p className="text-yellow-400 text-lg flex items-center mb-2">
                                                             <span className="mr-1">⭐</span> {rating}
                                                         </p>
-                                                        <p className="text-xs md:text-sm text-gray-300 mt-1">
-                                                            Rilis: {releaseDate || 'N/A'}
+                                                        <p className="text-sm text-gray-300 line-clamp-3">
+                                                            {item.overview || "No overview available."}
                                                         </p>
-                                                        
-                                                        {/* Ikon Play Besar */}
-                                                        <div className="absolute inset-0 flex items-center justify-center">
-                                                            <svg className="w-10 h-10 md:w-16 md:h-16 text-white bg-red-700/80 p-2 md:p-3 rounded-full opacity-90 transition duration-300" fill="currentColor" viewBox="0 0 20 20">
-                                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                                                            </svg>
-                                                        </div>
                                                     </div>
                                                 </Link>
-                                                
-                                                {/* Tombol Trailer (Diletakkan di luar Link agar hover effect tidak tumpang tindih) */}
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation(); // Mencegah klik menyebar ke Link
-                                                        getTrailer(item.id, mediaType);
-                                                    }}
-                                                    className={`w-full text-xs py-1 px-2 rounded-b-lg font-semibold transition ${themeClasses.buttonClass} block`}
-                                                >
-                                                    🎥 Lihat Trailer
-                                                </button>
                                             </div>
                                         );
                                     })}
@@ -381,7 +349,7 @@ const Cari = () => {
                                         >
                                             ← Sebelumnya
                                         </button>
-                                        <span className={`px-4 py-2 font-bold border rounded-lg ${themeClasses.textPrimary} ${themeClasses.inputClass.includes('dark') ? 'border-gray-600' : 'border-gray-300'}`}>
+                                        <span className={`px-4 py-2 font-bold border rounded-lg ${themeClasses.textPrimary} ${isDark ? 'border-gray-600' : 'border-gray-300'}`}>
                                             Halaman {currentPage} / {totalPages}
                                         </span>
                                         <button
@@ -395,36 +363,14 @@ const Cari = () => {
                                 )}
                             </>
                         ) : (
-                            !isInitialLoad && query.trim() ? emptyResultMessage : null
+                            // Tampilkan pesan kosong hanya setelah pencarian yang menghasilkan 0
+                            !isInitialLoad && query.trim() ? emptyResultMessage : null 
                         )
                     )}
                 </div>
             </div>
 
-            {/* modal trailer dan zoom gambar (tetap sama) */}
-            {showTrailer && trailerKey && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-90 z-50">
-                    <div className="relative w-11/12 md:w-3/4 lg:w-2/3">
-                        <iframe
-                            width="100%"
-                            height="500"
-                            src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&modestbranding=1&rel=0`}
-                            title="Trailer"
-                            frameBorder="0"
-                            allow="autoplay; encrypted-media; picture-in-picture"
-                            allowFullScreen
-                            className="rounded-lg shadow-lg"
-                        ></iframe>
-                        <button
-                            onClick={() => setShowTrailer(false)}
-                            className="absolute -top-10 right-0 text-white text-3xl font-bold"
-                        >
-                            ✖
-                        </button>
-                    </div>
-                </div>
-            )}
-
+            {/* Modal Zoom Gambar (Struktur modal, meskipun fungsionalitasnya belum dipicu di grid) */}
             {zoomImage && (
                 <div
                     className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-90 z-50"

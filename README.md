@@ -17,9 +17,9 @@ Detail Tim :
     - Menjadi moderator dalam pengerjaan projek
     - Memastikan semuanya berjalan dengan normal
 - Alfian
-  -
-  -
-  -
+  - Mengerjakan seluruh halaman daftar film (List Movie), termasuk kategori seperti Movie, Series, Trending, dan Now    Playing.
+  - Menghubungkan tiap kartu film ke halaman detail film melalui React Router Membuat komponen Rating & Review Memberi bintang (1–5) dan menulis ulasan film.Menambahkan dukungan tema gelap dan terang (dark/light mode) agar tampilan lebih konsisten dengan keseluruhan website.
+  - 
   -
   -
 

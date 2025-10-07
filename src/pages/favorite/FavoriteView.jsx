@@ -1,13 +1,18 @@
+// src/views/FavoriteView/FavoriteView.jsx
+
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { removeFavorite } from "../../reducer/favoriteReducer";
+import Footer from "../../components/common/Footer";
+import FloatingThemeButton from "../../components/common/FloatingThemeButton"; // 💡 Import komponen tema baru
 
+// 🔴 Hapus isMuted dan toggleSound dari props
 const FavoriteView = () => {
     const dispatch = useDispatch();
     const { films, series } = useSelector((state) => state.favorite);
-    const { theme } = useTheme();
+    const { theme } = useTheme(); 
 
     const [loading, setLoading] = useState(true);
 
@@ -31,7 +36,7 @@ const FavoriteView = () => {
     const textSecondary = theme === "dark" ? "text-gray-400" : "text-gray-600";
     const accentColor = "text-red-600";
 
-    // --- RENDER CARD FILM/SERIES (Glow Merata, Tombol Hapus Ikonik, Tanpa Ikon Play di Overlay) ---
+    // --- RENDER CARD FILM/SERIES (tetap sama) ---
     const renderCard = (item, type) => {
         const path = type === "film" ? `/film/${item.id}` : `/series/${item.id}`;
         const title = item.original_title || item.title || item.name || item.original_name;
@@ -46,16 +51,16 @@ const FavoriteView = () => {
             <div
                 key={`${type}-${item.id}`}
                 className="carousel-item w-64 relative rounded-lg overflow-hidden shadow-md transform transition duration-300
-                           group hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-600/50"
+                            group hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-600/50"
             >
-                {/* 🔴 TOMBOL HAPUS IKONIK (Muncul saat hover) */}
+                {/* 🔴 TOMBOL HAPUS IKONIK */}
                 <button
                     onClick={(e) => {
                         e.preventDefault(); 
                         handleRemove(item.id, type === "film" ? "films" : "series");
                     }}
                     className="absolute top-2 right-2 p-2 bg-red-700 hover:bg-red-800 text-white rounded-full z-20 
-                               opacity-0 group-hover:opacity-100 transition duration-300 shadow-lg"
+                                opacity-0 group-hover:opacity-100 transition duration-300 shadow-lg"
                     title="Hapus dari Favorit"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -81,14 +86,14 @@ const FavoriteView = () => {
                         {mediaLabel}
                     </span>
 
-                    {/* Overlay Interaktif Saat Hover (DENGAN DESKRIPSI) */}
+                    {/* Overlay Interaktif Saat Hover */}
                     <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 text-white">
                         <h3 className="text-xl font-extrabold mb-1 line-clamp-2">{title}</h3>
                         <p className="text-yellow-400 text-lg flex items-center mb-2">
                             <span className="mr-1">⭐</span> {rating}
                         </p>
                         
-                        {/* Deskripsi/Overview DITAMPILKAN di sini */}
+                        {/* Deskripsi/Overview */}
                         <p className="text-sm text-gray-300 line-clamp-3 mb-3">
                             {item.overview || "No overview available."}
                         </p>
@@ -98,15 +103,13 @@ const FavoriteView = () => {
                                 ? `Rilis: ${item.release_date}`
                                 : `Tayang Perdana: ${item.first_air_date}`}
                         </p>
-
-                        {/* Ikon Play Besar dihilangkan dari sini! */}
-                        
                     </div>
                 </Link>
             </div>
         );
     };
 
+    // --- RENDER SECTION (tetap sama) ---
     const renderSection = (items, title, type) => (
         <div className="mb-12 relative">
             <h3 className={`text-2xl font-bold mb-4 ${accentColor}`}>{title}</h3>
@@ -146,16 +149,25 @@ const FavoriteView = () => {
     }
 
     return (
-        <div className={`relative px-6 py-6 min-h-screen ${bgPrimary} ${textPrimary}`}>
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-2 text-red-600">Favorit Saya</h1>
-            <h2 className={`text-lg md:text-xl font-medium mb-8 ${textPrimary}`}>
-                Film & Series favoritmu tersimpan di sini.
-            </h2>
+        <div className={`relative min-h-screen ${bgPrimary} ${textPrimary}`}>
+            
+            {/* DIV KONTEN */}
+            <div className="px-6 py-6">
+                <h1 className="text-4xl md:text-5xl font-extrabold mb-2 text-red-600">Favorit Saya</h1>
+                <h2 className={`text-lg md:text-xl font-medium mb-8 ${textPrimary}`}>
+                    Film & Series favoritmu tersimpan di sini.
+                </h2>
 
-            {renderSection(films, "🎬 Film Favorit", "film")}
-            {renderSection(series, "📺 Series Favorit", "series")}
+                {renderSection(films, "🎬 Film Favorit", "film")}
+                {renderSection(series, "📺 Series Favorit", "series")}
+            </div>
+            
+            <Footer />
+
+            {/* 🚀 PANGGIL TOMBOL TEMA BARU */}
+            <FloatingThemeButton />
         </div>
     );
 };
 
-export default FavoriteView; // Export
+export default FavoriteView;

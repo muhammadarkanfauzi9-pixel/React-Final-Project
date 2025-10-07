@@ -1,17 +1,21 @@
 // src/components/Detail/SeriesDetail/SeriesDetailView.jsx (Presenter/View)
 
 import React from "react";
-import { Link } from "react-router-dom";
+// MENGUBAH: Tambahkan useNavigate. Pertahankan Link karena digunakan untuk Similar Series.
+import { Link, useNavigate } from "react-router-dom"; 
 // Impor ikon yang diperlukan
 import { FaStar, FaHeart, FaCalendarAlt, FaGlobe, FaTag, FaIndustry, FaPlay } from 'react-icons/fa';
 import { IoIosArrowBack } from 'react-icons/io';
 
 const IMG_BASE = "https://image.tmdb.org/t/p/original";
-const POSTER_BASE = "https://image.tmdb.org/t/p/w500"; // Menggunakan w500 untuk poster
+const POSTER_BASE = "https://image.tmdb.org/t/p/w500"; 
 
 const SeriesDetailView = ({ series, trailerKey, cast, similar, theme, handleFavorite }) => {
+    // MENAMBAH: Inisialisasi hook useNavigate
+    const navigate = useNavigate();
 
     const themeClass = theme === "dark" ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900";
+    // CATATAN: detailBgClass (bg-gray-800/bg-white) tetap digunakan untuk semua detail block, KECUALI Similar Series di bawah.
     const detailBgClass = theme === "dark" ? "bg-gray-800" : "bg-white";
     const cardBgClass = theme === "dark" ? "bg-gray-700" : "bg-gray-200";
 
@@ -35,12 +39,13 @@ const SeriesDetailView = ({ series, trailerKey, cast, similar, theme, handleFavo
 
                 {/* Tombol Back (Lebih rapi di sudut atas kiri) */}
                 <div className="absolute top-4 left-4 z-30">
-                    <Link 
-                        to="/" 
+                    <button 
+                        onClick={() => navigate(-1)} // PERUBAHAN UTAMA: navigate(-1) untuk kembali ke halaman sebelumnya
                         className="bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-md transition flex items-center gap-1 text-sm"
+                        title="Kembali ke halaman sebelumnya"
                     >
                         <IoIosArrowBack /> Back
-                    </Link>
+                    </button>
                 </div>
 
                 {/* Tombol Favorite (di kanan atas) */}
@@ -114,6 +119,7 @@ const SeriesDetailView = ({ series, trailerKey, cast, similar, theme, handleFavo
 
             {/* Konten Bawah - Deskripsi dan Data Tambahan */}
             <div className="container mx-auto px-4 md:px-10 -mt-10 md:mt-0 pb-12">
+                {/* Ringkasan, Trailer, Seasons, Casting (semua ini tetap menggunakan detailBgClass) */}
                 <div className={`p-6 rounded-xl shadow-2xl ${detailBgClass}`}>
                     
                     {/* RINGKASAN & OVERVIEW (Deskripsi) */}
@@ -199,6 +205,7 @@ const SeriesDetailView = ({ series, trailerKey, cast, similar, theme, handleFavo
                     <div className={`mt-8 p-6 rounded-xl shadow-2xl ${detailBgClass}`}>
                         <h3 className={`text-2xl font-bold mb-4 ${theme === "dark" ? "text-red-600" : "text-red-900"}`}>
                             👥 Top Cast
+                            {/* Styling ini sudah disesuaikan agar sama dengan komponen Casting yang di-request sebelumnya */}
                         </h3>
                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
                             {cast.slice(0, 8).map(c => ( // Batasi tampilan 8 cast teratas
@@ -221,18 +228,26 @@ const SeriesDetailView = ({ series, trailerKey, cast, similar, theme, handleFavo
                     </div>
                 )}
 
-                {/* 5. SIMILAR SERIES (Grid dengan Link Interaktif) */}
+                {/* 5. SIMILAR SERIES (Grid dengan Link Interaktif) - TELAH DISESUAIKAN */}
                 {similar.length > 0 && (
-                    <div className={`mt-8 p-6 rounded-xl shadow-2xl ${detailBgClass}`}>
-                        <h3 className={`text-2xl font-bold mb-4 ${theme === "dark" ? "text-red-600" : "text-red-900"}`}>
+                    <div 
+                        // Container disesuaikan: p-4, bg-gray-100 (light), menghilangkan shadow
+                        className={`mt-8 p-4 rounded-xl transition-colors duration-300 ${ 
+                            theme === "dark" ? "bg-gray-800 text-gray-100" : "bg-gray-100 text-gray-900" 
+                        }`}
+                    >
+                        {/* Judul disesuaikan: lebih kecil (text-lg) dan mb-3 */}
+                        <h3 className="text-lg font-bold mb-3">
                             🎞️ Similar Series
                         </h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                            {similar.slice(0, 10).map(s => ( // Batasi tampilan 10 similar
+                        {/* Grid disesuaikan: maksimal 4 kolom pada md, gap-3 */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            {similar.slice(0, 10).map(s => ( 
                                 <Link 
                                     key={s.id} 
                                     to={`/series/${s.id}`} 
-                                    className={`rounded-lg overflow-hidden shadow-md transition-all duration-300 transform hover:scale-[1.03] hover:shadow-red-600/50 ${cardBgClass}`}
+                                    // Link disesuaikan: menghilangkan shadow-md dan hover:shadow-red-600/50
+                                    className={`rounded-lg overflow-hidden transition-transform hover:scale-105 ${cardBgClass}`}
                                 >
                                     <img
                                         src={s.backdrop_path ? `${POSTER_BASE}${s.backdrop_path}` : "https://via.placeholder.com/500x281?text=No+Image"}
@@ -240,16 +255,15 @@ const SeriesDetailView = ({ series, trailerKey, cast, similar, theme, handleFavo
                                         className="w-full h-32 object-cover"
                                     />
                                     <div className="p-2">
-                                        <p className="text-sm font-semibold truncate">{s.name}</p>
-                                        <p className="text-xs flex items-center text-gray-500">
-                                            <FaStar className="text-yellow-400 mr-1" /> {s.vote_average?.toFixed(1)}
-                                        </p>
+                                        {/* Judul disesuaikan: text-xs */}
+                                        <p className="text-xs font-semibold truncate">{s.name}</p>
                                     </div>
                                 </Link>
                             ))}
                         </div>
                     </div>
                 )}
+
             </div>
         </div>
     );

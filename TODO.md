@@ -1,11 +1,36 @@
-# TODO: Add My List Feature and Enhance Search
-
-## Pending Tasks
-- [ ] Create MyListContext for managing list state and localStorage persistence
-- [ ] Create MyList page component to display saved items with remove functionality
-- [ ] Add route for /mylist in App.jsx
-- [ ] Update HomeView.jsx + My List button to add trending movie to list
-- [ ] Add + buttons to movie cards in ListMovie.jsx to add to list
-- [ ] Add + buttons to series cards in ListSeries.jsx to add to list
-- [ ] Update Cari.jsx to add category and sorting filters (oldest/newest)
-- [ ] Test adding/removing items and persistence
+- [x] Update card container class: remove bgSecondary, add group, update hover effects
+- [x] Change tag background to bg-red-900
+- [x] Change overlay background to bg-black/70
+- [x] Remove play icon from overlay
+- [x] Remove trailer button
+- [x] Update overlay content to include overview with line-clamp-3
+- [x] Remove unused variables and functions (getTrailer, trailerKey, showTrailer, releaseDate, trailer modal)
+- [x] Add comments to every line in src/main.jsx
+- [x] Add comments to every line in src/App.jsx
+- [x] Add comments to every line in src/context/ThemeContext.jsx
+- [x] Add comments to every line in src/reducer/detailReducer.js
+- [x] Add comments to every line in src/reducer/favoriteReducer.js
+- [x] Add comments to every line in src/reducer/filterReducer.js
+- [x] Add comments to every line in src/service/api.js
+- [x] Add comments to every line in src/store/store.js
+- [x] Add comments to every line in src/store/slices/languageSlices.js
+- [x] Add comments to every line in src/components/Cari/Cari.jsx
+- [x] Add comments to every line in src/components/common/Footer.jsx
+- [x] Add comments to every line in src/components/Detail/CastingFIlm/Casting.jsx
+- [x] Add comments to every line in src/components/Detail/DeskripsiFilm/DeskripsiFIlm.jsx
+- [x] Add comments to every line in src/components/Detail/RatingReview/RatingReview.jsx
+- [x] Add comments to every line in src/components/Detail/SimilarFilm/SimiliarFilm.jsx
+- [x] Add comments to every line in src/components/Favorite/FavoriteComponent.jsx
+- [ ] Add comments to every line in src/components/List/listMovie/ListMovie.jsx
+- [ ] Add comments to every line in src/components/List/listNowPlaying/ListNowPlaying.jsx
+- [ ] Add comments to every line in src/components/List/listSeries/ListSeries.jsx
+- [ ] Add comments to every line in src/components/List/listTrending/ListTrending.jsx
+- [ ] Add comments to every line in src/components/Rate/RateButton.jsx
+- [ ] Add comments to every line in src/pages/favorite/Favorite.jsx
+- [ ] Add comments to every line in src/pages/favorite/FavoriteView.jsx
+- [ ] Add comments to every line in src/pages/filmDetail/FilmDetail.jsx
+- [ ] Add comments to every line in src/pages/filmDetail/FilmDetailView.jsx
+- [ ] Add comments to every line in src/pages/Home/Home.jsx
+- [ ] Add comments to every line in src/pages/Home/HomeView.jsx
+- [ ] Add comments to every line in src/pages/seriesDetail/SeriesDetail.jsx
+- [ ] Add comments to every line in src/pages/seriesDetail/SeriesDetailView.jsx
