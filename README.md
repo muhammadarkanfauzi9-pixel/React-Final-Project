@@ -17,11 +17,11 @@ Detail Tim :
     - Menjadi moderator dalam pengerjaan projek
     - Memastikan semuanya berjalan dengan normal
 - Alfian
-  -
-  -
-  -
-  -
-  -
+  - mengerjakan semua components list mulai dari movie,series,tranding,now playing
+  - Menghubungkan setiap kartu film ke halaman detail film melalui React Router
+  - Melakukan penyesuaian style warna dan tema agar sesuai dengan tampilan utama website bioskop
+  - Menambahkan dukungan tema gelap dan terang (dark/light mode) agar tampilan lebih konsisten dengan keseluruhan website.
+  - Membuat komponen Rating & Review (RatingReview.jsx) yang memungkinkan pengguna memberi rating film
 
 - Evi
  -
