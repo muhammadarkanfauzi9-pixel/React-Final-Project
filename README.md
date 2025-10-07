@@ -1,6 +1,7 @@
 # Final Project / Bios Kocak
 
 Ketua Tim : M. Arkan Fauzi
+
 Detail Tim : 
 -  Hani
   - mengerjakan di masing masing components details seperti similar film, casting, dan deskripsi film
