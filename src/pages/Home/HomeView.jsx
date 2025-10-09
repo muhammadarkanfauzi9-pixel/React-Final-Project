@@ -9,7 +9,6 @@ import ListMovie from "../../components/List/listMovie/ListMovie";
 import ListSeries from "../../components/List/listSeries/ListSeries";
 import ListTrending from "../../components/List/listTrending/ListTrending";
 import ListNowPlaying from "../../components/List/listNowPlaying/ListNowPlaying";
-import Footer from "../../components/common/Footer";
 
 const HomeView = ({
   trendingMovie,
@@ -105,12 +104,6 @@ const HomeView = ({
             >
               ▶ Tonton Sekarang
             </Link>
-            <Link
-              to={"/favorite"}
-              className="bg-base-content/20 hover:bg-base-content/30 backdrop-blur-sm text-white font-semibold text-lg px-8 py-3 rounded-full flex items-center justify-center gap-2 transition duration-300 shadow-md"
-            >
-              + Tambah ke List
-            </Link>
           </div>
         </div>
       </div>
@@ -129,10 +122,6 @@ const HomeView = ({
         <div className="py-2">
           <ListSeries />
         </div>
-      </div>
-
-      <div className="py-2 mt-50">
-        <Footer />
       </div>
 
       {/* 🎛️ FLOATING BUTTONS */}

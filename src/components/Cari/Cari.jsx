@@ -1,7 +1,7 @@
 // src/components/Cari/Cari.jsx
 
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import { Link, useSearchParams } from "react-router-dom"; 
 import { useTheme } from "../../context/ThemeContext";
 
 // Import instance Axios yang sudah dikonfigurasi
@@ -12,26 +12,32 @@ const CATEGORY_STORAGE_KEY = "lastSearchCategory";
 
 const Cari = () => {
     const { theme } = useTheme();
+    
+    // --- PENGGUNAAN useSearchParams ---
+    const [searchParams, setSearchParams] = useSearchParams();
 
-    // State untuk kontrol input dan hasil
-    const [query, setQuery] = useState("");
+    // Dapatkan nilai dari URL (parameter "query", "type", "page")
+    const urlQuery = searchParams.get('query') || "";
+    const urlType = searchParams.get('type');
+    const urlPage = parseInt(searchParams.get('page')) || 1;
+    
+    // Fallback/Default values:
+    const savedCategory = localStorage.getItem(CATEGORY_STORAGE_KEY) || "movie";
+    
+    // Final state values yang dibaca dari URL/default:
+    const query = urlQuery;
+    const searchType = urlType || savedCategory;
+    const currentPage = urlPage;
+    
+    // State UI Lokal (tetap)
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
     const [notif, setNotif] = useState("");
-    const [zoomImage, setZoomImage] = useState(null); // State untuk modal zoom gambar (belum digunakan)
-
-    // Mengambil kategori tersimpan dari LocalStorage atau default ke 'movie'
-    const savedCategory = localStorage.getItem(CATEGORY_STORAGE_KEY) || "movie";
-
-    // State untuk kategori pencarian ('movie', 'tv', 'multi')
-    const [searchType, setSearchType] = useState(savedCategory);
-    
-    // State untuk pagination
-    const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    
-    // State untuk membedakan antara mode "Populer" dan "Cari"
-    const [isInitialLoad, setIsInitialLoad] = useState(true);
+    const [zoomImage, setZoomImage] = useState(null); 
+
+    // isInitialLoad kini didasarkan pada keberadaan query di URL
+    const isInitialLoad = !query.trim();
 
     const IMG_URL = "https://image.tmdb.org/t/p/w500";
 
@@ -52,24 +58,25 @@ const Cari = () => {
     };
     
     // --- FUNGSI UTAMA: Mengambil data Populer (Jika query kosong) ---
-    const fetchInitialData = async (typeToFetch, pageToFetch = 1) => {
-        // Jika 'multi' dipilih, gunakan 'movie' populer untuk tampilan awal
+    const fetchInitialData = useCallback(async (typeToFetch, pageToFetch) => {
         if (typeToFetch === 'multi') typeToFetch = 'movie'; 
         
-        setIsInitialLoad(true);
         setLoading(true);
         try {
             const res = await api.get(`/${typeToFetch}/popular`, {
                 params: {
                     language: "en-US",
                     page: pageToFetch,
-                    include_adult: false 
+                    // Pastikan parameter ini ada dan false untuk memfilter dari sumber
+                    adult: false 
                 },
             });
+            
+            // --- MODIFIKASI: Filter hasil lokal untuk memastikan tidak ada konten dewasa ---
+            const filteredResults = res.data.results.filter(item => item.adult !== true);
 
-            setResults(res.data.results || []);
+            setResults(filteredResults || []);
             setTotalPages(res.data.total_pages);
-            setCurrentPage(pageToFetch);
 
         } catch (error) {
             console.error("Fetch Initial Data Error:", error);
@@ -77,39 +84,37 @@ const Cari = () => {
             setTimeout(() => setNotif(""), 3000);
         } finally {
             setLoading(false);
-            window.scrollTo(0, 0); // Gulir ke atas halaman
+            window.scrollTo(0, 0); 
         }
-    };
+    }, []); 
     
     // --- FUNGSI UTAMA: Melakukan Pencarian (Jika ada input query) ---
-    const executeSearch = async (pageToFetch = 1, currentSearchType = searchType) => {
-        // Jika query kosong, muat data populer
-        if (!query.trim()) {
-            fetchInitialData(currentSearchType, 1);
-            return;
-        }
+    const executeSearch = useCallback(async (pageToFetch, currentSearchType) => {
+        if (!query.trim()) return;
 
-        setIsInitialLoad(false);
         setLoading(true);
         try {
             const endpoint = `/search/${currentSearchType}`;
             
             const res = await api.get(endpoint, {
                 params: {
-                    query,
+                    query, 
                     language: "en-US",
                     page: pageToFetch,
+                    // Pastikan parameter ini ada dan false untuk memfilter dari sumber
                     include_adult: false 
                 },
             });
 
             // Filter tipe 'person' (aktor/kru) jika menggunakan mode 'multi'
-            const searchResults = currentSearchType === 'multi'
+            let searchResults = currentSearchType === 'multi'
                 ? res.data.results.filter(item => item.media_type !== 'person')
                 : res.data.results;
             
+            // --- MODIFIKASI: Filter hasil lokal untuk memastikan tidak ada konten dewasa ---
+            searchResults = searchResults.filter(item => item.adult !== true);
+
             setTotalPages(res.data.total_pages);
-            setCurrentPage(pageToFetch);
 
             if (searchResults.length === 0) {
                 setNotif(`❌ Tidak ada hasil untuk "${query}" pada kategori ${currentSearchType.toUpperCase()}`);
@@ -118,6 +123,7 @@ const Cari = () => {
                 setTimeout(() => setNotif(""), 3000);
             } else {
                 setResults(searchResults || []);
+                setNotif(""); 
             }
         } catch (error) {
             console.error("Search Error:", error);
@@ -125,52 +131,73 @@ const Cari = () => {
             setTimeout(() => setNotif(""), 3000);
         } finally {
             setLoading(false);
-            window.scrollTo(0, 0); // Gulir ke atas halaman
+            window.scrollTo(0, 0); 
         }
-    };
+    }, [query]); 
+
+    // --- EFFECT: Inisialisasi URL ---
+    useEffect(() => {
+        if (!urlType && !urlQuery) {
+             setSearchParams({ type: savedCategory, page: 1 }, { replace: true });
+        }
+    }, [urlType, urlQuery, savedCategory, setSearchParams]);
+
+    // --- EFFECT: Pemicu Utama Pengambilan Data ---
+    useEffect(() => {
+        if (isInitialLoad) {
+            fetchInitialData(searchType, currentPage);
+        } else {
+            executeSearch(currentPage, searchType);
+        }
+    }, [searchType, currentPage, isInitialLoad, fetchInitialData, executeSearch]); 
+
+    
+    // --- HANDLER: Memperbarui Query di URL ---
+    const handleQueryChange = (e) => {
+        const newQuery = e.target.value;
+        const newParams = { type: searchType, page: 1 };
+        
+        if (newQuery.trim()) {
+            newParams.query = newQuery;
+        }
+        
+        setSearchParams(newParams, { replace: true }); 
+    }
 
     // Handler saat form pencarian disubmit
     const handleSearch = (e) => {
-        if (e) e.preventDefault();
-        setCurrentPage(1); // Reset ke halaman 1
-        executeSearch(1);
+        e.preventDefault();
+        if (currentPage !== 1) {
+             const newParams = { type: searchType, page: 1 };
+             if (query.trim()) newParams.query = query;
+             setSearchParams(newParams);
+        }
     };
     
     // Handler untuk mengubah kategori dari sidebar
     const handleCategoryChange = (newType) => {
-        setSearchType(newType);
-        localStorage.setItem(CATEGORY_STORAGE_KEY, newType); // Simpan kategori
-        setCurrentPage(1);
-
-        if (!query.trim()) {
-            // Jika kolom pencarian kosong, muat data populer
-            setIsInitialLoad(true);
-            fetchInitialData(newType, 1);
-        } else {
-            // Jika ada query, jalankan ulang pencarian dengan tipe baru
-            setIsInitialLoad(false);
-            executeSearch(1, newType);
+        localStorage.setItem(CATEGORY_STORAGE_KEY, newType); 
+        
+        const newParams = { type: newType, page: 1 };
+        
+        if (query.trim()) {
+            newParams.query = query.trim();
         }
+        
+        setSearchParams(newParams); 
     }
-    
-    // --- useEffect: Memuat data awal saat komponen pertama kali di-mount ---
-    useEffect(() => {
-        fetchInitialData(searchType, 1);
-    }, []); 
 
-    // --- useEffect: Mengulang pencarian/pengambilan data saat halaman (currentPage) berubah ---
-    useEffect(() => {
-        if (currentPage !== 1) { // Mencegah double fetch pada inisialisasi awal
-            if (query.trim()) {
-                executeSearch(currentPage);
-            } else {
-                fetchInitialData(searchType, currentPage);
-            }
+    // Handler untuk pagination
+    const updatePage = (newPage) => {
+        const newParams = { type: searchType, page: newPage };
+        
+        if (query.trim()) {
+            newParams.query = query.trim();
         }
-    }, [currentPage]);
+        setSearchParams(newParams);
+    };
 
-
-    // Komponen Pesan Hasil Kosong
+    // Komponen Pesan Hasil Kosong (dan yang lainnya) tetap sama...
     const emptyResultMessage = (
         <div className="text-center py-20">
             <h2 className={`text-2xl font-bold ${themeClasses.textPrimary}`}>
@@ -182,12 +209,11 @@ const Cari = () => {
         </div>
     );
     
-    // Komponen Sidebar untuk Filter Kategori
     const SidebarCategory = () => {
         const categories = [
+            { type: 'multi', name: 'Semua Hasil Pencarian' },
             { type: 'movie', name: 'Film Populer/Cari' },
             { type: 'tv', name: 'Series Populer/Cari' },
-            { type: 'multi', name: 'Semua Hasil Pencarian' },
         ];
 
         return (
@@ -222,12 +248,8 @@ const Cari = () => {
     return (
         <div className={`px-4 ${themeClasses.bgPrimary} min-h-screen ${themeClasses.textPrimary} pb-10`}>
             
-            {/* Notifikasi Pop-up (di tengah layar) */}
-            {notif && (
-                <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-yellow-400 text-black font-semibold px-6 py-3 rounded-lg shadow-lg z-50">
-                    {notif}
-                </div>
-            )}
+            {/* Notifikasi Pop-up */}
+            {notif}
 
             {/* Form Pencarian */}
             <form
@@ -237,17 +259,10 @@ const Cari = () => {
                 <input
                     type="text"
                     placeholder={`Cari ${searchType === 'movie' ? 'film' : searchType === 'tv' ? 'series' : 'film/series'}...`}
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
+                    value={query} 
+                    onChange={handleQueryChange} 
                     className={`rounded-lg p-3 flex-grow max-w-lg focus:outline-none focus:ring-2 focus:ring-red-500 ${themeClasses.inputClass}`}
-                />
-                <button
-                    type="submit"
-                    className={`font-semibold px-6 py-3 rounded-lg transition ${themeClasses.buttonClass}`}
-                    disabled={loading}
-                >
-                    🔍 Cari
-                </button>
+                />  
             </form>
 
             {/* TATA LETAK UTAMA: SIDEBAR DAN HASIL */}
@@ -273,27 +288,25 @@ const Cari = () => {
                                         {isInitialLoad 
                                             ? `Populer ${searchType === 'tv' ? 'Series' : 'Film'}` 
                                             : `Hasil Pencarian "${query}" (${searchType.toUpperCase()})`}
-                                    </h3>
-                                    <p className={themeClasses.textSecondary}>
+                                   </h3>
+                                   <p className={themeClasses.textSecondary}>
                                         Halaman {currentPage} dari {totalPages}.
-                                    </p>
+                                   </p>
                                 </div>
                                 
                                 {/* Grid Hasil */}
                                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
                                     {results.map((item) => {
-                                        // Tentukan tipe media (movie/tv), utamakan media_type dari 'multi'
+                                        // Pastikan item tidak memiliki label dewasa
+                                        if (item.adult) return null; // Baris pengaman ekstra
+
                                         const mediaType = item.media_type || (searchType === 'tv' ? 'tv' : 'movie');
                                         const isMovie = mediaType === 'movie';
                                         
-                                        // Ambil Judul yang sesuai
                                         const titleText = isMovie ? item.original_title || item.title : item.name;
-                                        
-                                        // Tentukan path Link
                                         const linkPath = isMovie ? `/film/${item.id}` : `/series/${item.id}`;
                                         const rating = item.vote_average?.toFixed(1) || 'N/A';
                                         
-                                        // Tentukan URL Poster
                                         const imageUrl = item.poster_path
                                             ? `${IMG_URL}${item.poster_path}`
                                             : `https://via.placeholder.com/500x750?text=No+Image`;
@@ -313,7 +326,6 @@ const Cari = () => {
                                                     <img
                                                         src={imageUrl}
                                                         alt={titleText}
-                                                        // Gunakan rasio aspek 2/3 untuk konsistensi poster
                                                         className="w-full h-full object-cover rounded-lg aspect-[2/3]"
                                                         onError={(e) => { e.target.src = `https://via.placeholder.com/500x750?text=Error+Loading`; }}
                                                     />
@@ -343,7 +355,7 @@ const Cari = () => {
                                 {totalPages > 1 && (
                                     <div className="flex justify-center mt-8 gap-3">
                                         <button
-                                            onClick={() => setCurrentPage(p => p - 1)}
+                                            onClick={() => updatePage(currentPage - 1)}
                                             disabled={currentPage === 1 || loading}
                                             className={`px-4 py-2 rounded-lg font-semibold transition ${themeClasses.buttonClass} disabled:opacity-50`}
                                         >
@@ -353,7 +365,7 @@ const Cari = () => {
                                             Halaman {currentPage} / {totalPages}
                                         </span>
                                         <button
-                                            onClick={() => setCurrentPage(p => p + 1)}
+                                            onClick={() => updatePage(currentPage + 1)}
                                             disabled={currentPage === totalPages || loading}
                                             className={`px-4 py-2 rounded-lg font-semibold transition ${themeClasses.buttonClass} disabled:opacity-50`}
                                         >
@@ -363,14 +375,13 @@ const Cari = () => {
                                 )}
                             </>
                         ) : (
-                            // Tampilkan pesan kosong hanya setelah pencarian yang menghasilkan 0
                             !isInitialLoad && query.trim() ? emptyResultMessage : null 
                         )
                     )}
                 </div>
             </div>
 
-            {/* Modal Zoom Gambar (Struktur modal, meskipun fungsionalitasnya belum dipicu di grid) */}
+            {/* Modal Zoom Gambar */}
             {zoomImage && (
                 <div
                     className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-90 z-50"

@@ -10,14 +10,26 @@ const ListNowPlaying = () => {
     const [loading, setLoading] = useState(true);
     const { theme } = useTheme();
 
-    const bgColor = theme === 'dark' ? 'from-base-100' : 'from-base-100'; // Sesuaikan jika 'base-100' berubah berdasarkan tema
+    // --- Definisi Warna Adaptif ---
+    // textPrimary digunakan untuk teks utama (adaptif tema)
+    const textPrimary = "text-base-content"; 
+    // bgColor untuk gradient (adaptif tema)
+    const bgColor = theme === 'dark' ? 'from-base-100' : 'from-base-100'; 
+    // ----------------------------
 
     useEffect(() => {
         const fetchNowPlaying = async () => {
             setLoading(true);
             try {
-                const res = await api.get("/movie/now_playing");
-                setNowPlaying(res.data.results);
+                const res = await api.get("/movie/now_playing", {
+                    // PENTING: Tambahkan filter konten dewasa (seperti di komponen list lainnya)
+                    params: { include_adult: false }, 
+                });
+                
+                // Filter hasil secara lokal sebagai lapisan keamanan tambahan
+                const filteredMovies = res.data.results.filter(item => item.adult !== true);
+
+                setNowPlaying(filteredMovies);
             } catch (err) {
                 console.error(err);
             }
@@ -27,6 +39,9 @@ const ListNowPlaying = () => {
     }, []);
 
     const renderCard = (movie) => {
+        // PENTING: Periksa lagi filter 18+
+        if (movie.adult) return null; 
+
         const rating = movie.vote_average?.toFixed(1) || 'N/A';
         const title = movie.original_title;
         const overview = movie.overview;
@@ -38,7 +53,7 @@ const ListNowPlaying = () => {
             <div
                 key={movie.id}
                 className="carousel-item w-64 relative rounded-lg overflow-hidden shadow-md transform transition duration-300
-                           group hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-600/50"
+                            group hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-600/50"
             >
                 <Link 
                     to={`/film/${movie.id}`} 
@@ -52,7 +67,7 @@ const ListNowPlaying = () => {
                         onError={(e) => { e.target.src = `https://via.placeholder.com/256x384?text=Error+Loading`; }}
                     />
                     
-                    {/* Tag Header */}
+                    {/* Tag Header disamakan warnanya (red-900) */}
                     <span className="absolute top-0 left-0 bg-red-900 text-xs px-2 py-1 rounded-br-lg z-10 text-white font-semibold">
                         Now Playing
                     </span>
@@ -74,13 +89,15 @@ const ListNowPlaying = () => {
 
     return (
         <div className="p-4 container mx-auto">
-            <h2 className="text-2xl font-bold flex items-center gap-2 mb-4 text-red-900">
+            {/* 👇 PERUBAHAN DI SINI: Text size 3xl dan menggunakan textPrimary */}
+            <h2 className={`text-3xl font-bold flex items-center gap-2 mb-6 ${textPrimary}`}>
                 🎞️ Now Playing
             </h2>
 
             {loading ? (
                 <div className="flex justify-center items-center h-80">
-                    <span className="loading loading-spinner loading-lg text-red-900"></span>
+                    {/* Menggunakan text-red-600 untuk spinner (sesuai ListTrending) */}
+                    <span className="loading loading-spinner loading-lg text-red-600"></span>
                 </div>
             ) : (
                 <div className="relative">

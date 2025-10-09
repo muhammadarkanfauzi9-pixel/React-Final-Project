@@ -1,3 +1,5 @@
+// src/components/List/listSeries/ListSeries.jsx
+
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../../service/api";
@@ -13,20 +15,30 @@ const ListSeries = () => {
     const [loading, setLoading] = useState(false);
     const { theme } = useTheme();
 
-    // Tentukan latar belakang adaptif untuk gradient
+    // --- Perubahan Warna dan Tema ---
+    // Sesuaikan dengan ListTrending:
+    const textPrimary = "text-base-content"; 
     const bgColor = theme === 'dark' ? 'from-base-100' : 'from-base-100'; 
-    // Warna untuk elemen-elemen aksen yang disamakan dengan ListMovie yang sudah diperbaiki
-    const accentColor = "text-red-900"; 
-    const btnColor = "bg-red-900";
+    const btnClass = "bg-red-700 text-white"; // Warna solid untuk tombol
+    // ---------------------------------
 
     const fetchSeries = async () => {
         setLoading(true);
         try {
+            // **PENTING: Tambahkan include_adult: false di sini untuk keamanan konten 18+**
             const res = await api.get("/discover/tv", {
-                params: { page, sort_by: sortBy },
+                params: { 
+                    page, 
+                    sort_by: sortBy,
+                    include_adult: false, // Tambahkan filter konten dewasa
+                },
             });
-            setSeries(res.data.results);
-            // Batasi totalPages agar tidak terlalu besar di UI, seperti di ListMovie
+
+            // Filter hasil secara lokal sebagai lapisan keamanan tambahan
+            const filteredSeries = res.data.results.filter(item => item.adult !== true);
+
+            setSeries(filteredSeries);
+            // Batasi totalPages agar tidak terlalu besar di UI
             setTotalPages(Math.min(res.data.total_pages, 500)); 
         } catch (err) {
             console.error(err);
@@ -72,12 +84,15 @@ const ListSeries = () => {
         const title = serie.original_name;
         const overview = serie.overview;
 
+        // PENTING: Periksa lagi filter 18+ di sini (walaupun sudah difilter di fetchSeries)
+        if (serie.adult) return null; 
+
         return (
             <div
                 key={serie.id}
                 // Class disamakan: w-64, dan menggunakan 'carousel-item'
                 className="carousel-item w-64 relative rounded-lg overflow-hidden shadow-md transform transition duration-300
-                                group hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-600/50"
+                            group hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-600/50"
             >
                 <Link 
                     to={`/series/${serie.id}`} 
@@ -114,11 +129,12 @@ const ListSeries = () => {
     return (
         <div className="p-4 container mx-auto">
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-                <h2 className={`text-2xl font-bold flex items-center gap-2 ${accentColor}`}>
+                {/* 👇 PERUBAHAN DI SINI: Text size 3xl dan menggunakan textPrimary */}
+                <h2 className={`text-3xl font-bold flex items-center gap-2 ${textPrimary}`}>
                     📺 List Series
                 </h2>
                 
-                {/* 👇 DROPDOWN AESTHETIC BARU (Disamakan dengan ListMovie) */}
+                {/* DROPDOWN AESTHETIC BARU */}
                 <div className="dropdown dropdown-end">
                     
                     {/* Tombol Dropdown */}
@@ -156,12 +172,12 @@ const ListSeries = () => {
                         ))}
                     </ul>
                 </div>
-                {/* 👆 AKHIR DROPDOWN */}
             </div>
 
             {loading ? (
                 <div className="flex justify-center items-center h-80">
-                    <span className={`loading loading-spinner loading-lg ${accentColor}`}></span>
+                    {/* Menggunakan text-red-600 untuk spinner (seperti di ListTrending) */}
+                    <span className={`loading loading-spinner loading-lg text-red-600`}></span>
                 </div>
             ) : (
                 <>
@@ -183,21 +199,23 @@ const ListSeries = () => {
                             </div>
                         </div>
                     </div>
+                    
+                    {/* PAGINATION */}
                     <div className="flex justify-center mt-6 gap-2">
                         <button
                             disabled={page === 1 || loading}
                             onClick={() => setPage((p) => p - 1)}
-                            className={`px-3 py-1 ${btnColor} text-white rounded disabled:opacity-50 hover:bg-red-800 transition`}
+                            className={`px-3 py-1 ${btnClass} rounded disabled:opacity-50 hover:bg-red-800 transition`}
                         >
                             Prev
                         </button>
-                        <span className={`font-bold flex items-center ${accentColor}`}>
+                        <span className={`font-bold flex items-center ${textPrimary}`}>
                             {page} / {totalPages}
                         </span>
                         <button
                             disabled={page === totalPages || loading}
                             onClick={() => setPage((p) => p + 1)}
-                            className={`px-3 py-1 ${btnColor} text-white rounded disabled:opacity-50 hover:bg-red-800 transition`}
+                            className={`px-3 py-1 ${btnClass} rounded disabled:opacity-50 hover:bg-red-800 transition`}
                         >
                             Next
                         </button>

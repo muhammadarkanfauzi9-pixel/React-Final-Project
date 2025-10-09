@@ -8,7 +8,7 @@ import SimiliarFilm from "../../components/Detail/SimilarFilm/SimiliarFilm";
 import Casting from "../../components/Detail/CastingFilm/Casting";
 import RatingReview from "../../components/Detail/RatingReview/RatingReview";
 import { useTheme } from "../../context/ThemeContext";
-import FloatingThemeButton from "../../components/common/FloatingThemeButton"; // 💡 Import komponen tema baru
+import FloatingThemeButton from "../../components/common/FloatingThemeButton"; 
 // Import Icons
 import { IoIosArrowBack } from "react-icons/io";
 import { FaStar, FaPlay, FaGlobe, FaClock } from "react-icons/fa"; 
@@ -16,7 +16,6 @@ import { FaStar, FaPlay, FaGlobe, FaClock } from "react-icons/fa";
 const IMG_BASE = "https://image.tmdb.org/t/p/original";
 const POSTER_BASE = "https://image.tmdb.org/t/p/w500";
 
-// 🔴 Hapus isMuted dan toggleSound dari props
 const FilmDetailView = ({ film, trailerKey, handleFavorite }) => {
     const { theme } = useTheme(); 
     const navigate = useNavigate();
@@ -34,12 +33,11 @@ const FilmDetailView = ({ film, trailerKey, handleFavorite }) => {
         return `${hours}h ${remainingMinutes}m`;
     };
 
-    // 🔴 HAPUS SEMUA useEffect KONTROL SUARA
-
     return (
         <div className={`min-h-screen transition-colors duration-300 ${themeClass}`}>
             
             {/* 1. HERO SECTION & POSTER */}
+            {/* ... (kode HERO SECTION tidak berubah) ... */}
             <div className="relative w-full h-auto pb-12">
                 
                 {/* Backdrop Image dengan Overlay Blur */}
@@ -133,6 +131,26 @@ const FilmDetailView = ({ film, trailerKey, handleFavorite }) => {
 
             {/* Konten Detail Lainnya */}
             <div className="container mx-auto px-4 md:px-10 -mt-10 md:mt-0 pb-12">
+                
+                {/* 🔴 1. AUDIO PLAYER DITEMPATKAN DI SINI */}
+                <div className="my-10 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                    <h3 className="text-2xl font-bold mb-4 text-red-700 dark:text-red-500">
+                        🎵 Soundtrack Film (AI Generated)
+                    </h3>
+                    
+                    <audio 
+                        controls 
+                        className="w-full" // Membuat player mengambil lebar penuh container
+                    >
+                        <source 
+                            // 🔑 GANTI 'URL_SOUNDTRACK_ANDA' dengan tautan file MP3/M4A 
+                            // yang Anda dapatkan dari Sunoai atau Google Drive (Langkah 4).
+                            src="/theConjuring.mp3" 
+                            type="audio/mpeg" // Ganti type jika format file Anda berbeda (misalnya: 'audio/wav')
+                        />
+                        Browser Anda tidak mendukung elemen audio.
+                    </audio>
+                </div>
                 
                 {/* 2. Deskripsi Film */}
                 <DeskripsiFilm film={film} trailerKey={trailerKey} theme={theme} handleFavorite={handleFavorite} /> 

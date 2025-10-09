@@ -60,7 +60,7 @@ const ListTrending = () => {
                     />
                     
                     {/* Overlay Header */}
-                    <span className="absolute top-0 left-0 bg-red-600 text-xs px-2 py-1 rounded-br-lg z-10 text-white font-semibold">
+                    <span className="absolute top-0 left-0 bg-red-900 text-xs px-2 py-1 rounded-br-lg z-10 text-white font-semibold">
                         {mediaLabel}
                     </span>
                     

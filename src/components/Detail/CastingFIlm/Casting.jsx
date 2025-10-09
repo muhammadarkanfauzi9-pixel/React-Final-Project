@@ -34,7 +34,7 @@ const Casting = ({ filmId, theme }) => {
                     },
                 }
             );
-            setCast(castRes.data.cast.slice(0, 10)); // Ambil 10 pemeran utama
+            setCast(castRes.data.cast.slice(0, 16)); // Ambil 16 pemeran utama
         } catch (err) {
             console.error("Gagal mengambil data pemeran:", err);
             setError("Gagal memuat data pemeran. Silakan coba lagi.");

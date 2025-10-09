@@ -7,6 +7,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaStar, FaHeart, FaCalendarAlt, FaGlobe, FaTag, FaIndustry, FaPlay } from 'react-icons/fa';
 import { IoIosArrowBack } from 'react-icons/io';
 
+// MENAMBAH: Impor komponen baru (Asumsikan jalur relatif)
+import RatingReview from "../../components/Detail/RatingReview/RatingReview";
+import FloatingThemeButton from "../../components/common/FloatingThemeButton";
+
 const IMG_BASE = "https://image.tmdb.org/t/p/original";
 const POSTER_BASE = "https://image.tmdb.org/t/p/w500"; 
 
@@ -15,7 +19,7 @@ const SeriesDetailView = ({ series, trailerKey, cast, similar, theme, handleFavo
     const navigate = useNavigate();
 
     const themeClass = theme === "dark" ? "bg-gray-900 text-gray-100" : "bg-gray-100 text-gray-900";
-    // CATATAN: detailBgClass (bg-gray-800/bg-white) tetap digunakan untuk semua detail block, KECUALI Similar Series di bawah.
+    // CATATAN: detailBgClass (bg-gray-800/bg-white) tetap digunakan untuk semua detail block
     const detailBgClass = theme === "dark" ? "bg-gray-800" : "bg-white";
     const cardBgClass = theme === "dark" ? "bg-gray-700" : "bg-gray-200";
 
@@ -119,7 +123,7 @@ const SeriesDetailView = ({ series, trailerKey, cast, similar, theme, handleFavo
 
             {/* Konten Bawah - Deskripsi dan Data Tambahan */}
             <div className="container mx-auto px-4 md:px-10 -mt-10 md:mt-0 pb-12">
-                {/* Ringkasan, Trailer, Seasons, Casting (semua ini tetap menggunakan detailBgClass) */}
+                {/* Ringkasan, Metadata, Seasons, Casting (semua ini tetap menggunakan detailBgClass) */}
                 <div className={`p-6 rounded-xl shadow-2xl ${detailBgClass}`}>
                     
                     {/* RINGKASAN & OVERVIEW (Deskripsi) */}
@@ -205,7 +209,6 @@ const SeriesDetailView = ({ series, trailerKey, cast, similar, theme, handleFavo
                     <div className={`mt-8 p-6 rounded-xl shadow-2xl ${detailBgClass}`}>
                         <h3 className={`text-2xl font-bold mb-4 ${theme === "dark" ? "text-red-600" : "text-red-900"}`}>
                             👥 Top Cast
-                            {/* Styling ini sudah disesuaikan agar sama dengan komponen Casting yang di-request sebelumnya */}
                         </h3>
                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
                             {cast.slice(0, 8).map(c => ( // Batasi tampilan 8 cast teratas
@@ -260,11 +263,26 @@ const SeriesDetailView = ({ series, trailerKey, cast, similar, theme, handleFavo
                                     </div>
                                 </Link>
                             ))}
+                            {/* KOMPONEN RatingReview dan FloatingThemeButton telah dipindahkan dari sini. */}
                         </div>
                     </div>
                 )}
-
+                
+                {/* 6. RATING & REVIEW (Blok Konten Baru) */}
+                {/* Menggunakan series.id dan detailBgClass yang sama dengan blok di atas */}
+                <div className={`mt-8 p-6 rounded-xl shadow-2xl ${detailBgClass}`}>
+                    <h3 className={`text-2xl font-bold mb-4 ${theme === "dark" ? "text-red-600" : "text-red-900"}`}>
+                        ⭐ User Reviews
+                    </h3>
+                    {/* PERBAIKAN: Menggunakan series.id, bukan film.id */}
+                    <RatingReview seriesId={series.id} theme={theme} />
+                </div>
+                
             </div>
+            
+            {/* 7. FLOATING THEME BUTTON (Diletakkan di Root untuk Posisi Melayang) */}
+            <FloatingThemeButton />
+
         </div>
     );
 };

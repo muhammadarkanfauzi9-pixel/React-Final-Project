@@ -16,7 +16,7 @@ const FilmDetail = () => {
     const [state, localDispatch] = useReducer(detailReducer, initialState);
     const reduxDispatch = useDispatch();
     
-    // Asumsi tema diambil dari ThemeContext (atau sesuaikan jika dari Redux)
+    // Asumsi tema diambil dari ThemeContext     (atau sesuaikan jika dari Redux)
     const { theme } = useTheme(); 
     
     // Tambahkan cast dan similar ke destructuring state

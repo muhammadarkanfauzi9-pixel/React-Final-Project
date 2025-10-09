@@ -5,7 +5,6 @@ import { useSelector, useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { removeFavorite } from "../../reducer/favoriteReducer";
-import Footer from "../../components/common/Footer";
 import FloatingThemeButton from "../../components/common/FloatingThemeButton"; // 💡 Import komponen tema baru
 
 // 🔴 Hapus isMuted dan toggleSound dari props
@@ -161,8 +160,6 @@ const FavoriteView = () => {
                 {renderSection(films, "🎬 Film Favorit", "film")}
                 {renderSection(series, "📺 Series Favorit", "series")}
             </div>
-            
-            <Footer />
 
             {/* 🚀 PANGGIL TOMBOL TEMA BARU */}
             <FloatingThemeButton />

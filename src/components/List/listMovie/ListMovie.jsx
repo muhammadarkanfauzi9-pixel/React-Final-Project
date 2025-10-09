@@ -11,19 +11,29 @@ const ListMovie = () => {
     const [sortBy, setSortBy] = useState("release_date.desc");
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false);
-    // Perbaikan: useTheme harus dipanggil sebagai fungsi, bukan hanya referensi
     const { theme } = useTheme(); 
 
-    // Tentukan latar belakang adaptif untuk gradient
+    // --- Definisi Warna Adaptif Baru (Disamakan dengan ListTrending/Series) ---
+    const textPrimary = "text-base-content"; 
     const bgColor = theme === 'dark' ? 'from-base-100' : 'from-base-100'; 
+    const btnClass = "bg-red-700 text-white"; // Warna solid untuk tombol
+    // --------------------------------------------------------------------------
 
     const fetchMovies = async () => {
         setLoading(true);
         try {
             const res = await api.get("/discover/movie", {
-                params: { page, sort_by: sortBy },
+                params: { 
+                    page, 
+                    sort_by: sortBy,
+                    include_adult: false, // Tambahkan filter konten dewasa
+                },
             });
-            setMovies(res.data.results);
+
+            // Filter hasil secara lokal sebagai lapisan keamanan tambahan
+            const filteredMovies = res.data.results.filter(item => item.adult !== true);
+
+            setMovies(filteredMovies);
             // Batasi totalPages agar tidak terlalu besar di UI
             setTotalPages(Math.min(res.data.total_pages, 500)); 
         } catch (err) {
@@ -47,8 +57,24 @@ const ListMovie = () => {
         }
     }
 
-    // --- FUNGSI RENDER CARD DISESUAIKAN DENGAN ListNowPlaying ---
+    // Fungsi untuk mengubah sortBy dan mereset page ke 1
+    const handleSortChange = (newSortBy) => {
+        setPage(1);
+        setSortBy(newSortBy);
+    };
+
+    // Daftar opsi sorting
+    const sortOptions = [
+        { value: "release_date.desc", label: "Terbaru → Terlama" },
+        { value: "release_date.asc", label: "Terlama → Terbaru" },
+        { value: "vote_average.desc", label: "Rating Tertinggi" },
+        { value: "popularity.desc", label: "Paling Populer" },
+    ];
+
     const renderCard = (movie) => {
+        // Pastikan filter 18+ diterapkan
+        if (movie.adult) return null; 
+        
         const rating = movie.vote_average?.toFixed(1) || 'N/A';
         const title = movie.original_title;
         const overview = movie.overview;
@@ -59,9 +85,8 @@ const ListMovie = () => {
         return (
             <div
                 key={movie.id}
-                // Class disamakan: w-64, dan menggunakan 'carousel-item'
                 className="carousel-item w-64 relative rounded-lg overflow-hidden shadow-md transform transition duration-300
-                                group hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-600/50"
+                            group hover:scale-[1.03] hover:shadow-2xl hover:shadow-red-600/50"
             >
                 <Link 
                     to={`/film/${movie.id}`} 
@@ -94,30 +119,16 @@ const ListMovie = () => {
             </div>
         );
     }
-    // --- AKHIR PENYESUAIAN RENDER CARD ---
-
-    // Fungsi untuk mengubah sortBy dan mereset page ke 1
-    const handleSortChange = (newSortBy) => {
-        setPage(1);
-        setSortBy(newSortBy);
-    };
-
-    // Daftar opsi sorting
-    const sortOptions = [
-        { value: "release_date.desc", label: "Terbaru → Terlama" },
-        { value: "release_date.asc", label: "Terlama → Terbaru" },
-        { value: "vote_average.desc", label: "Rating Tertinggi" },
-        { value: "popularity.desc", label: "Paling Populer" },
-    ];
 
     return (
         <div className="p-4 container mx-auto">
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-                <h2 className="text-2xl font-bold flex items-center gap-2 text-red-900"> {/* Warna Judul disamakan */}
+                {/* 👇 PERUBAHAN DI SINI: Text size 3xl dan menggunakan textPrimary */}
+                <h2 className={`text-3xl font-bold flex items-center gap-2 ${textPrimary}`}>
                     🎬 List Movies
                 </h2>
                 
-                {/* DROPDOWN */}
+                {/* DROPDOWN - Sudah konsisten */}
                 <div className="dropdown dropdown-end">
                     <div tabIndex={0} role="button" className="
                         btn btn-sm text-sm border-2 border-red-700 
@@ -150,12 +161,12 @@ const ListMovie = () => {
                         ))}
                     </ul>
                 </div>
-                {/* AKHIR DROPDOWN */}
             </div>
 
             {loading ? (
                 <div className="flex justify-center items-center h-80">
-                    <span className="loading loading-spinner loading-lg text-red-900"></span> {/* Warna Loading disamakan */}
+                    {/* 👇 PERUBAHAN DI SINI: Warna loading spinner disamakan */}
+                    <span className="loading loading-spinner loading-lg text-red-600"></span> 
                 </div>
             ) : (
                 <>
@@ -170,30 +181,32 @@ const ListMovie = () => {
                             className={`absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l ${bgColor} to-transparent pointer-events-none z-10`}
                         />
 
-                        {/* Mengganti div flex dengan 'carousel' dan 'space-x-4' */}
                         <div className="overflow-x-auto scroll-smooth pb-2 px-4">
-                            {/* Class 'carousel w-full' dan 'space-x-4' disamakan */}
                             <div className="carousel w-full space-x-4 pb-2">
                                 {movies.map(renderCard)}
                             </div>
                         </div>
                     </div>
                     
+                    {/* PAGINATION */}
                     <div className="flex justify-center mt-6 gap-2">
                         <button
                             disabled={page === 1 || loading}
                             onClick={() => setPage((p) => p - 1)}
-                            className="px-3 py-1 bg-red-900 text-white rounded disabled:opacity-50 hover:bg-red-800 transition" // Warna disamakan
+                            // 👇 PERUBAHAN DI SINI: Menggunakan btnClass/bg-red-700
+                            className={`px-3 py-1 ${btnClass} rounded disabled:opacity-50 hover:bg-red-800 transition`} 
                         >
                             Prev
                         </button>
-                        <span className="text-base-content font-bold flex items-center">
+                        {/* 👇 PERUBAHAN DI SINI: Menggunakan textPrimary untuk angka halaman */}
+                        <span className={`font-bold flex items-center ${textPrimary}`}>
                             {page} / {totalPages}
                         </span>
                         <button
                             disabled={page === totalPages || loading}
                             onClick={() => setPage((p) => p + 1)}
-                            className="px-3 py-1 bg-red-900 text-white rounded disabled:opacity-50 hover:bg-red-800 transition" // Warna disamakan
+                            // 👇 PERUBAHAN DI SINI: Menggunakan btnClass/bg-red-700
+                            className={`px-3 py-1 ${btnClass} rounded disabled:opacity-50 hover:bg-red-800 transition`}
                         >
                             Next
                         </button>
